@@ -5,7 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:mekanat/models/church.dart';
 import 'package:mekanat/providers/church_provider.dart';
 import 'package:mekanat/screens/church_detail_screen.dart';
-import 'package:mekanat/screens/suggest_screen.dart';  // Add this import
+import 'package:mekanat/screens/suggest_screen.dart'; // Add this import
 import 'package:mekanat/widgets/custom_search_bar.dart';
 import 'package:mekanat/widgets/glass_card.dart';
 
@@ -18,7 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late MapController _mapController;
   Position? _currentPosition;
   List<Church> _filteredChurches = [];
-  List<GeoPoint> _currentMarkers = [];  // Track current markers for removal
+  List<GeoPoint> _currentMarkers = []; // Track current markers for removal
 
   @override
   void initState() {
@@ -46,19 +46,26 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     _currentPosition = await Geolocator.getCurrentPosition();
-    await _mapController.changeLocation(GeoPoint(latitude: _currentPosition!.latitude, longitude: _currentPosition!.longitude));
+    await _mapController.changeLocation(GeoPoint(
+        latitude: _currentPosition!.latitude,
+        longitude: _currentPosition!.longitude));
   }
 
   void _search(String query) {
-    final churches = Provider.of<ChurchProvider>(context, listen: false).churches;
+    final churches =
+        Provider.of<ChurchProvider>(context, listen: false).churches;
     setState(() {
-      _filteredChurches = churches.where((church) => church.name.toLowerCase().contains(query.toLowerCase())).toList();
+      _filteredChurches = churches
+          .where((church) =>
+              church.name.toLowerCase().contains(query.toLowerCase()))
+          .toList();
     });
   }
 
   Future<void> _showNearby() async {
     if (_currentPosition == null) return;
-    final nearby = await Provider.of<ChurchProvider>(context, listen: false).getNearbyChurches(_currentPosition!, 50); // 50km
+    final nearby = await Provider.of<ChurchProvider>(context, listen: false)
+        .getNearbyChurches(_currentPosition!, 50); // 50km
     _addMarkers(nearby);
   }
 
@@ -80,13 +87,17 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final churches = Provider.of<ChurchProvider>(context).churches;
-    _filteredChurches = _filteredChurches.isEmpty ? churches : _filteredChurches;
+    _filteredChurches =
+        _filteredChurches.isEmpty ? churches : _filteredChurches;
 
     return Scaffold(
       appBar: AppBar(
         title: Text('Mekanat', style: TextStyle(color: Colors.white)),
         actions: [
-          IconButton(icon: Icon(Icons.add), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SuggestScreen()))),
+          IconButton(
+              icon: Icon(Icons.add),
+              onPressed: () => Navigator.push(
+                  context, MaterialPageRoute(builder: (_) => SuggestScreen()))),
           IconButton(icon: Icon(Icons.near_me), onPressed: _showNearby),
         ],
       ),
@@ -94,18 +105,25 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           OSMFlutter(
             controller: _mapController,
-            osmOption: const OSMOption(  // Required parameter
-              zoomOption: ZoomOption(initZoom: 8, minZoomLevel: 3, maxZoomLevel: 19),
+            osmOption: const OSMOption(
+              // Required parameter
+              zoomOption:
+                  ZoomOption(initZoom: 8, minZoomLevel: 3, maxZoomLevel: 19),
               showDefaultInfoWindow: true,
             ),
             onGeoPointClicked: (geoPoint) {
               // Find church at point (approximate match due to floating point)
               final church = churches.firstWhere(
-                (c) => (c.lat - geoPoint.latitude).abs() < 0.0001 && (c.lng - geoPoint.longitude).abs() < 0.0001,
+                (c) =>
+                    (c.lat - geoPoint.latitude).abs() < 0.0001 &&
+                    (c.lng - geoPoint.longitude).abs() < 0.0001,
                 orElse: () => Church(id: '', name: '', lat: 0, lng: 0),
               );
               if (church.id.isNotEmpty) {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => ChurchDetailScreen(church: church)));
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => ChurchDetailScreen(church: church)));
               }
             },
           ),
@@ -123,10 +141,16 @@ class _HomeScreenState extends State<HomeScreen> {
               child: GlassCard(
                 child: ListView.builder(
                   shrinkWrap: true,
-                  itemCount: _filteredChurches.length > 5 ? 5 : _filteredChurches.length, // Show top 5
+                  itemCount: _filteredChurches.length > 5
+                      ? 5
+                      : _filteredChurches.length, // Show top 5
                   itemBuilder: (ctx, i) => ListTile(
                     title: Text(_filteredChurches[i].name),
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChurchDetailScreen(church: _filteredChurches[i]))),
+                    onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => ChurchDetailScreen(
+                                church: _filteredChurches[i]))),
                   ),
                 ),
               ),

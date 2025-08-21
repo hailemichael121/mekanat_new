@@ -1,0 +1,68 @@
+name: mekanat
+description: A Flutter app for mapping Ethiopian Orthodox churches.
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_osm_plugin: ^1.4.2
+  geolocator: ^14.0.2
+  firebase_core: ^4.0.0
+  cloud_firestore: ^6.0.0
+  firebase_auth: ^6.0.1
+  firebase_storage: ^13.0.0
+  image_picker: ^1.2.0
+  provider: ^6.1.5+1
+  intl: ^0.20.2
+  http: ^1.5.0
+  share_plus: ^11.1.0
+  characters: 1.4.0 # Pinned to match flutter_test
+  vector_math: ^2.1.4
+  flutter_svg: ^2.0.7
+  curved_navigation_bar: ^1.0.6
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  leak_tracker: ^11.0.1 # Compatible with leak_tracker_testing 3.0.1
+  leak_tracker_flutter_testing: ^3.0.9
+  leak_tracker_testing: ^3.0.2 # Pinned to match flutter_test
+  lints: ^6.0.0
+  flutter_launcher_icons: ^0.13.1
+  flutter_vector_icons: ^2.0.0
+
+flutter:
+  uses-material-design: true
+
+  #  assets:
+  #   - assets/
+  #   - assets/images/
+  #   - assets/icons/menu_icon.svg
+  #   - assets/icons/done_icon.svg
+  #   - assets/icons/in_progress_icon.svg
+  #   - assets/icons/pause_icon.svg
+  #   - "assets/icons/search_icon.svg"
+  #   - assets/icons/calander_icon.svg
+  #   - assets/icons/notification_bel_icon.svg
+  #   - assets/icons/add_task_icon.svg
+  #   - assets/icons/achivements_icon.svg
+  #   - assets/icons/profile_icon.svg
+  #   - assets/add_task_shapes/add_habit.svg
+  #   - assets/add_task_shapes/add_reminder.svg
+  #   - assets/add_task_shapes/add_task.svg
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/icon.png"
+  remove_alpha_ios: true
+  adaptive_icon_foreground: "assets/icons/app_icon_foreground.png" # Optional for Android
+  adaptive_icon_background: "#D4AF37"
+  # adaptive_icon_background: "#939e5c"
+  # adaptive_icon_foreground: "assets/icons/icon_foreground.png"
+  # adaptive_icon_monochrome: "assets/icons/icon_monochrome.png"

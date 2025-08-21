@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "192238861880",
+    "project_id": "fxjournal-4b0a7",
+    "storage_bucket": "fxjournal-4b0a7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:192238861880:android:29496ac77f00ece43c70cd",
+        "android_client_info": {
+          "package_name": "com.example.fx_journal"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANqIVEijzvNqg9RK_tCy1PQEJA_4USQK4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:192238861880:android:2ab0c3e36f4d40503c70cd",
+        "android_client_info": {
+          "package_name": "com.example.mekanat_new"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANqIVEijzvNqg9RK_tCy1PQEJA_4USQK4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

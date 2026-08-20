@@ -1,0 +1,11 @@
+<resources>
+    <color name="primary">#8B4513</color>
+    <color name="primary_gold">#D4A017</color>
+    <color name="primary_dark_gold">#B8860B</color>
+    <color name="secondary_crimson">#B71C1C</color>
+    <color name="tertiary_green">#078930</color>
+    <color name="background_light">#FAF7F2</color>
+    <color name="surface_light">#FFFFFF</color>
+    <color name="text_primary">#2A2421</color>
+    <color name="text_secondary">#6E655F</color>
+</resources>

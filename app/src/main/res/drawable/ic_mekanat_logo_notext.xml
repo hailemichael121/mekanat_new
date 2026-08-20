@@ -1,0 +1,73 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+
+    <!-- Outer Pin Left Arc (Gold) -->
+    <path
+        android:strokeColor="#C59B35"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:pathData="M 32,54 C 27,42 32,18 50,14 C 58,14 65,18 70,24" />
+
+    <!-- Outer Pin Right Arc & Tip (Olive Green) -->
+    <path
+        android:strokeColor="#4A5F3B"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:pathData="M 70,24 C 77,32 78,44 71,56 L 50,90 L 32,54" />
+
+    <!-- Orbit Satellite Dot -->
+    <path
+        android:fillColor="#C59B35"
+        android:pathData="M 78,29 a 2.5,2.5 0 1,0 0.01,0 Z" />
+
+    <!-- Church Silhouette - Cross (Gold) -->
+    <path
+        android:strokeColor="#C59B35"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:pathData="M 50,22 L 50,33 M 45,26 L 55,26" />
+
+    <!-- Church Building Contour (Gold) -->
+    <path
+        android:strokeColor="#C59B35"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M 38,58 L 38,44 L 43,44 C 43,37 57,37 57,44 L 62,44 L 62,58" />
+
+    <!-- Church Arched Doorway (Gold) -->
+    <path
+        android:strokeColor="#C59B35"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:pathData="M 46,58 L 46,51 C 46,47 54,47 54,51 L 54,58" />
+
+    <!-- Left Hill (Olive Green) -->
+    <path
+        android:fillColor="#6B7F56"
+        android:pathData="M 32,54 Q 42,50 49,60 L 40,70 Q 34,62 32,54 Z" />
+
+    <!-- Right Hill Upper (Warm Earth Tan) -->
+    <path
+        android:fillColor="#B5A071"
+        android:pathData="M 51,60 Q 60,51 71,56 L 66,66 Q 58,62 51,60 Z" />
+
+    <!-- Right Hill Lower (Muted Forest) -->
+    <path
+        android:fillColor="#536643"
+        android:pathData="M 66,66 L 50,90 L 44,75 Q 56,76 66,66 Z" />
+
+    <!-- Winding Pilgrim Path (Clean Ivory / White) -->
+    <path
+        android:fillColor="#FDFCF7"
+        android:pathData="M 46,58 L 54,58 C 52,63 44,65 42,71 C 40,76 52,82 50,90 C 47,82 43,77 44,71 C 45,66 50,62 46,58 Z" />
+
+    <!-- Bottom Pin Point Accent (Olive) -->
+    <path
+        android:fillColor="#4A5F3B"
+        android:pathData="M 50,90 L 47,84 Q 50,86 53,84 Z" />
+
+</vector>

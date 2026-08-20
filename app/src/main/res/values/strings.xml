@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Mekanat</string>
+    <string name="app_tagline">Ethiopian Orthodox Church Mapping &amp; Heritage</string>
+    <string name="search_hint">Search churches, tabots, cities…</string>
+    <string name="nav_map">Map</string>
+    <string name="nav_bible">Bible</string>
+    <string name="nav_prayer">Prayer</string>
+    <string name="nav_events">Events</string>
+    <string name="nav_profile">Profile</string>
+    <string name="suggest_church">Suggest Church</string>
+    <string name="suggest_edit">Suggest Edit</string>
+    <string name="nearby_churches">Nearby Churches</string>
+    <string name="get_route">Get Directions</string>
+    <string name="share_location">Share Church</string>
+    <string name="upload_photo">Upload Photo</string>
+</resources>

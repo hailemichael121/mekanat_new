@@ -1,6 +1,9 @@
 package com.example.mekanat_new.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -8,15 +11,16 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -26,12 +30,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Fill
@@ -44,10 +50,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.mekanat_new.ui.theme.SignalRed
+import com.example.mekanat_new.ui.theme.BrandEmber
 
 /**
- * Convenient helper for subtle tactile haptic feedback throughout Mekanat.
+ * Tactile haptic feedback helpers throughout Mekanat.
  */
 fun HapticFeedback.vibrateSubtle() {
     this.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -57,283 +63,722 @@ fun HapticFeedback.vibrateClick() {
     this.performHapticFeedback(HapticFeedbackType.LongPress)
 }
 
+// =========================================================================
+// Mekanät Custom Stroke Icon System — Section 07 of Brand Document
+// 24px Grid, 1.75px Stroke, Rounded Joins
+// =========================================================================
+
 /**
- * Custom SVG Vector: Orthodox Sanctuary & Monolithic Dome Navigation Icon
+ * 07 — Church Sanctuary Icon: Ethiopian Orthodox Sanctuary Dome & Cross
+ * SVG: 24dp grid, 1.75dp stroke, rounded joins
  */
 @Composable
-fun NavSanctuaryIcon(
-    isSelected: Boolean,
+fun MekanatIconChurchSanctuary(
     modifier: Modifier = Modifier,
     size: Dp = 24.dp,
-    tint: Color = MaterialTheme.colorScheme.primary
+    tint: Color = MaterialTheme.colorScheme.onSurface,
+    filled: Boolean = false
 ) {
     Canvas(modifier = modifier.size(size)) {
         val w = this.size.width
         val h = this.size.height
-        val strokeW = if (isSelected) 2.2f else 1.8f
+        val strokeW = 1.75f * (w / 24f)
+        val strokeStyle = Stroke(width = strokeW, cap = StrokeCap.Round, join = StrokeJoin.Round)
 
-        // Top Ge'ez Cross on apex
-        drawLine(
-            color = tint,
-            start = Offset(w * 0.5f, h * 0.08f),
-            end = Offset(w * 0.5f, h * 0.28f),
-            strokeWidth = strokeW,
-            cap = StrokeCap.Round
-        )
-        drawLine(
-            color = tint,
-            start = Offset(w * 0.38f, h * 0.16f),
-            end = Offset(w * 0.62f, h * 0.16f),
-            strokeWidth = strokeW,
-            cap = StrokeCap.Round
-        )
-
-        // Sanctuary Main Dome Roof (Curved arch)
-        val roofPath = Path().apply {
-            moveTo(w * 0.16f, h * 0.58f)
+        // Sanctuary Contour: Sloped wings, central tower, dome
+        val sanctuaryPath = Path().apply {
+            moveTo(4.0f * (w / 24f), 20f * (h / 24f))
+            lineTo(4.0f * (w / 24f), 14f * (h / 24f))
+            lineTo(7.5f * (w / 24f), 11.5f * (h / 24f))
+            lineTo(7.5f * (w / 24f), 9.0f * (h / 24f))
             cubicTo(
-                w * 0.22f, h * 0.28f,
-                w * 0.78f, h * 0.28f,
-                w * 0.84f, h * 0.58f
+                7.5f * (w / 24f), 5.5f * (h / 24f),
+                16.5f * (w / 24f), 5.5f * (h / 24f),
+                16.5f * (w / 24f), 9.0f * (h / 24f)
             )
-            close()
-        }
-        if (isSelected) {
-            drawPath(path = roofPath, color = tint.copy(alpha = 0.22f), style = Fill)
-        }
-        drawPath(path = roofPath, color = tint, style = Stroke(width = strokeW, join = StrokeJoin.Round))
-
-        // Lower Sanctuary Wall Base
-        val baseLeft = w * 0.2f
-        val baseRight = w * 0.8f
-        val baseTop = h * 0.58f
-        val baseBottom = h * 0.90f
-
-        drawRoundRect(
-            color = tint,
-            topLeft = Offset(baseLeft, baseTop),
-            size = Size(baseRight - baseLeft, baseBottom - baseTop),
-            cornerRadius = CornerRadius(3f, 3f),
-            style = Stroke(width = strokeW)
-        )
-
-        // Center Archway Portal (Monastery Door)
-        val doorPath = Path().apply {
-            moveTo(w * 0.40f, baseBottom)
-            lineTo(w * 0.40f, h * 0.72f)
-            cubicTo(
-                w * 0.40f, h * 0.64f,
-                w * 0.60f, h * 0.64f,
-                w * 0.60f, h * 0.72f
-            )
-            lineTo(w * 0.60f, baseBottom)
-        }
-        if (isSelected) {
-            drawPath(path = doorPath, color = tint, style = Fill)
-        } else {
-            drawPath(path = doorPath, color = tint, style = Stroke(width = strokeW))
-        }
-    }
-}
-
-/**
- * Custom SVG Vector: Sacred Tabot Ark & Bookmark Ribbon Navigation Icon
- */
-@Composable
-fun NavSavedIcon(
-    isSelected: Boolean,
-    modifier: Modifier = Modifier,
-    size: Dp = 24.dp,
-    tint: Color = MaterialTheme.colorScheme.primary
-) {
-    Canvas(modifier = modifier.size(size)) {
-        val w = this.size.width
-        val h = this.size.height
-        val strokeW = if (isSelected) 2.2f else 1.8f
-
-        // Ribbon Body
-        val ribbonPath = Path().apply {
-            moveTo(w * 0.24f, h * 0.12f)
-            lineTo(w * 0.76f, h * 0.12f)
-            lineTo(w * 0.76f, h * 0.88f)
-            lineTo(w * 0.50f, h * 0.70f)
-            lineTo(w * 0.24f, h * 0.88f)
+            lineTo(16.5f * (w / 24f), 11.5f * (h / 24f))
+            lineTo(20.0f * (w / 24f), 14f * (h / 24f))
+            lineTo(20.0f * (w / 24f), 20f * (h / 24f))
             close()
         }
 
-        if (isSelected) {
-            drawPath(path = ribbonPath, color = tint.copy(alpha = 0.25f), style = Fill)
-            drawPath(path = ribbonPath, color = tint, style = Stroke(width = strokeW, join = StrokeJoin.Round))
-        } else {
-            drawPath(path = ribbonPath, color = tint, style = Stroke(width = strokeW, join = StrokeJoin.Round))
+        if (filled) {
+            drawPath(path = sanctuaryPath, color = tint.copy(alpha = 0.18f), style = Fill)
         }
+        drawPath(path = sanctuaryPath, color = tint, style = strokeStyle)
 
-        // Inner Holy Cross
+        // Latin Cross atop Sanctuary Apex (vertical + horizontal bar)
         drawLine(
             color = tint,
-            start = Offset(w * 0.50f, h * 0.26f),
-            end = Offset(w * 0.50f, h * 0.56f),
+            start = Offset(12f * (w / 24f), 2.0f * (h / 24f)),
+            end = Offset(12f * (w / 24f), 6.0f * (h / 24f)),
             strokeWidth = strokeW,
             cap = StrokeCap.Round
         )
         drawLine(
             color = tint,
-            start = Offset(w * 0.36f, h * 0.38f),
-            end = Offset(w * 0.64f, h * 0.38f),
+            start = Offset(9.8f * (w / 24f), 3.6f * (h / 24f)),
+            end = Offset(14.2f * (w / 24f), 3.6f * (h / 24f)),
             strokeWidth = strokeW,
             cap = StrokeCap.Round
         )
-    }
-}
 
-/**
- * Custom SVG Vector: Ethiopian Orthodox Liturgical Calendar Navigation Icon
- */
-@Composable
-fun NavCalendarIcon(
-    isSelected: Boolean,
-    modifier: Modifier = Modifier,
-    size: Dp = 24.dp,
-    tint: Color = MaterialTheme.colorScheme.primary
-) {
-    Canvas(modifier = modifier.size(size)) {
-        val w = this.size.width
-        val h = this.size.height
-        val strokeW = if (isSelected) 2.2f else 1.8f
-
-        // Calendar Outer Body
-        val calLeft = w * 0.18f
-        val calRight = w * 0.82f
-        val calTop = h * 0.20f
-        val calBottom = h * 0.88f
-
-        drawRoundRect(
-            color = tint,
-            topLeft = Offset(calLeft, calTop),
-            size = Size(calRight - calLeft, calBottom - calTop),
-            cornerRadius = CornerRadius(6f, 6f),
-            style = Stroke(width = strokeW)
-        )
-
-        if (isSelected) {
-            // Fill header section
-            drawRoundRect(
-                color = tint.copy(alpha = 0.28f),
-                topLeft = Offset(calLeft, calTop),
-                size = Size(calRight - calLeft, h * 0.20f),
-                cornerRadius = CornerRadius(6f, 6f),
-                style = Fill
+        // Arched Portal / Doorway
+        val portalPath = Path().apply {
+            moveTo(9.8f * (w / 24f), 20f * (h / 24f))
+            lineTo(9.8f * (w / 24f), 15f * (h / 24f))
+            cubicTo(
+                9.8f * (w / 24f), 12.8f * (h / 24f),
+                14.2f * (w / 24f), 12.8f * (h / 24f),
+                14.2f * (w / 24f), 15f * (h / 24f)
             )
+            lineTo(14.2f * (w / 24f), 20f * (h / 24f))
         }
-
-        // Top Binder Rings (Parchment bindings)
-        drawLine(
-            color = tint,
-            start = Offset(w * 0.35f, h * 0.10f),
-            end = Offset(w * 0.35f, h * 0.24f),
-            strokeWidth = strokeW * 1.2f,
-            cap = StrokeCap.Round
-        )
-        drawLine(
-            color = tint,
-            start = Offset(w * 0.65f, h * 0.10f),
-            end = Offset(w * 0.65f, h * 0.24f),
-            strokeWidth = strokeW * 1.2f,
-            cap = StrokeCap.Round
-        )
-
-        // Separator line
-        drawLine(
-            color = tint,
-            start = Offset(calLeft, h * 0.40f),
-            end = Offset(calRight, h * 0.40f),
-            strokeWidth = strokeW
-        )
-
-        // Calendar Ge'ez Cross in center
-        val crossCenterY = h * 0.64f
-        drawLine(
-            color = tint,
-            start = Offset(w * 0.50f, crossCenterY - h * 0.12f),
-            end = Offset(w * 0.50f, crossCenterY + h * 0.12f),
-            strokeWidth = strokeW,
-            cap = StrokeCap.Round
-        )
-        drawLine(
-            color = tint,
-            start = Offset(w * 0.38f, crossCenterY - h * 0.03f),
-            end = Offset(w * 0.62f, crossCenterY - h * 0.03f),
-            strokeWidth = strokeW,
-            cap = StrokeCap.Round
-        )
+        drawPath(path = portalPath, color = tint, style = strokeStyle)
     }
 }
 
 /**
- * Custom SVG Vector: Pilgrim Staff & Prayer Aura Profile Navigation Icon
+ * 07 — Map Navigation Icon (Defaults to Custom Church Sanctuaries SVG)
  */
 @Composable
-fun NavProfileIcon(
-    isSelected: Boolean,
+fun MekanatIconMap(
     modifier: Modifier = Modifier,
     size: Dp = 24.dp,
-    tint: Color = MaterialTheme.colorScheme.primary
+    tint: Color = MaterialTheme.colorScheme.onSurface
+) {
+    MekanatIconChurchSanctuary(modifier = modifier, size = size, tint = tint)
+}
+
+/**
+ * Real Vector Icons for Travel Modes (No Emojis)
+ */
+@Composable
+fun MekanatIconDrive(
+    modifier: Modifier = Modifier,
+    size: Dp = 20.dp,
+    tint: Color = MaterialTheme.colorScheme.onSurface
 ) {
     Canvas(modifier = modifier.size(size)) {
         val w = this.size.width
         val h = this.size.height
-        val strokeW = if (isSelected) 2.2f else 1.8f
+        val strokeW = 1.75f * (w / 24f)
+        val strokeStyle = Stroke(width = strokeW, cap = StrokeCap.Round, join = StrokeJoin.Round)
 
-        // Head / Aura
+        // Car Body Contour
+        val carPath = Path().apply {
+            moveTo(3f * (w / 24f), 14f * (h / 24f))
+            lineTo(5f * (w / 24f), 8f * (h / 24f))
+            lineTo(19f * (w / 24f), 8f * (h / 24f))
+            lineTo(21f * (w / 24f), 14f * (h / 24f))
+            lineTo(21f * (w / 24f), 18f * (h / 24f))
+            lineTo(19f * (w / 24f), 18f * (h / 24f))
+            lineTo(19f * (w / 24f), 16f * (h / 24f))
+            lineTo(5f * (w / 24f), 16f * (h / 24f))
+            lineTo(5f * (w / 24f), 18f * (h / 24f))
+            lineTo(3f * (w / 24f), 18f * (h / 24f))
+            close()
+        }
+        drawPath(path = carPath, color = tint, style = strokeStyle)
+
+        // Wheels
+        drawCircle(color = tint, radius = 1.8f * (w / 24f), center = Offset(6.5f * (w / 24f), 17.5f * (h / 24f)), style = strokeStyle)
+        drawCircle(color = tint, radius = 1.8f * (w / 24f), center = Offset(17.5f * (w / 24f), 17.5f * (h / 24f)), style = strokeStyle)
+        
+        // Windshield
+        drawLine(color = tint, start = Offset(7f * (w / 24f), 13f * (h / 24f)), end = Offset(17f * (w / 24f), 13f * (h / 24f)), strokeWidth = strokeW, cap = StrokeCap.Round)
+    }
+}
+
+@Composable
+fun MekanatIconWalk(
+    modifier: Modifier = Modifier,
+    size: Dp = 20.dp,
+    tint: Color = MaterialTheme.colorScheme.onSurface
+) {
+    MekanatIconPilgrimage(modifier = modifier, size = size, tint = tint)
+}
+
+/**
+ * 07 — Pilgrimage / Walking Mode Icon: Pure Clean Walking Man (No Staff, No Clutter)
+ */
+@Composable
+fun MekanatIconPilgrimage(
+    modifier: Modifier = Modifier,
+    size: Dp = 20.dp,
+    tint: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val w = this.size.width
+        val h = this.size.height
+        val strokeW = 1.9f * (w / 24f)
+        val strokeStyle = Stroke(width = strokeW, cap = StrokeCap.Round, join = StrokeJoin.Round)
+
+        // Head (Filled or crisp outline)
         drawCircle(
             color = tint,
-            radius = w * 0.18f,
-            center = Offset(w * 0.44f, h * 0.28f),
-            style = if (isSelected) Fill else Stroke(width = strokeW)
+            radius = 2.1f * (w / 24f),
+            center = Offset(13.5f * (w / 24f), 4.2f * (h / 24f)),
+            style = Fill
         )
 
-        // Pilgrim Cloak / Shoulders
-        val cloakPath = Path().apply {
-            moveTo(w * 0.18f, h * 0.86f)
-            cubicTo(
-                w * 0.20f, h * 0.52f,
-                w * 0.68f, h * 0.52f,
-                w * 0.70f, h * 0.86f
+        // Torso / Spine leaning slightly forward
+        val torsoPath = Path().apply {
+            moveTo(13.5f * (w / 24f), 7.2f * (h / 24f))
+            lineTo(12.0f * (w / 24f), 13.0f * (h / 24f))
+        }
+        drawPath(path = torsoPath, color = tint, style = strokeStyle)
+
+        // Stepping Front Leg (Knee forward, foot down)
+        val frontLegPath = Path().apply {
+            moveTo(12.0f * (w / 24f), 13.0f * (h / 24f))
+            lineTo(9.2f * (w / 24f), 16.8f * (h / 24f))
+            lineTo(6.5f * (w / 24f), 21.0f * (h / 24f))
+        }
+        drawPath(path = frontLegPath, color = tint, style = strokeStyle)
+
+        // Trailing Back Leg
+        val backLegPath = Path().apply {
+            moveTo(12.0f * (w / 24f), 13.0f * (h / 24f))
+            lineTo(15.2f * (w / 24f), 16.5f * (h / 24f))
+            lineTo(17.2f * (w / 24f), 20.8f * (h / 24f))
+        }
+        drawPath(path = backLegPath, color = tint, style = strokeStyle)
+
+        // Swinging Front Arm (Bent at elbow forward)
+        val frontArmPath = Path().apply {
+            moveTo(13.2f * (w / 24f), 8.5f * (h / 24f))
+            lineTo(10.5f * (w / 24f), 11.8f * (h / 24f))
+            lineTo(9.0f * (w / 24f), 14.5f * (h / 24f))
+        }
+        drawPath(path = frontArmPath, color = tint, style = strokeStyle)
+
+        // Trailing Back Arm
+        val backArmPath = Path().apply {
+            moveTo(13.2f * (w / 24f), 8.5f * (h / 24f))
+            lineTo(16.5f * (w / 24f), 11.2f * (h / 24f))
+            lineTo(18.2f * (w / 24f), 13.8f * (h / 24f))
+        }
+        drawPath(path = backArmPath, color = tint, style = strokeStyle)
+    }
+}
+
+@Composable
+fun MekanatIconTransit(
+    modifier: Modifier = Modifier,
+    size: Dp = 20.dp,
+    tint: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val w = this.size.width
+        val h = this.size.height
+        val strokeW = 1.75f * (w / 24f)
+        val strokeStyle = Stroke(width = strokeW, cap = StrokeCap.Round, join = StrokeJoin.Round)
+
+        // Bus/Transit Body
+        drawRoundRect(
+            color = tint,
+            topLeft = Offset(5f * (w / 24f), 4f * (h / 24f)),
+            size = Size(14f * (w / 24f), 15f * (h / 24f)),
+            cornerRadius = CornerRadius(2.5f * (w / 24f), 2.5f * (h / 24f)),
+            style = strokeStyle
+        )
+
+        // Windshield window
+        drawLine(color = tint, start = Offset(5f * (w / 24f), 10f * (h / 24f)), end = Offset(19f * (w / 24f), 10f * (h / 24f)), strokeWidth = strokeW, cap = StrokeCap.Round)
+        
+        // Headlights
+        drawCircle(color = tint, radius = 1.2f * (w / 24f), center = Offset(7.5f * (w / 24f), 14.5f * (h / 24f)), style = Fill)
+        drawCircle(color = tint, radius = 1.2f * (w / 24f), center = Offset(16.5f * (w / 24f), 14.5f * (h / 24f)), style = Fill)
+
+        // Wheels
+        drawLine(color = tint, start = Offset(7f * (w / 24f), 19f * (h / 24f)), end = Offset(7f * (w / 24f), 21.5f * (h / 24f)), strokeWidth = strokeW * 1.3f, cap = StrokeCap.Round)
+        drawLine(color = tint, start = Offset(17f * (w / 24f), 19f * (h / 24f)), end = Offset(17f * (w / 24f), 21.5f * (h / 24f)), strokeWidth = strokeW * 1.3f, cap = StrokeCap.Round)
+    }
+}
+
+/**
+ * 07 — Bookmarks Icon: Silk ribbon swallowtail
+ * SVG: path d="M7 4.2h10a.8.8 0 0 1 .8.8v14.3l-5.8-3.9-5.8 3.9V5a.8.8 0 0 1 .8-.8z"
+ */
+@Composable
+fun MekanatIconBookmarks(
+    modifier: Modifier = Modifier,
+    size: Dp = 24.dp,
+    tint: Color = MaterialTheme.colorScheme.onSurface,
+    filled: Boolean = false
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val w = this.size.width
+        val h = this.size.height
+        val strokeW = 1.75f * (w / 24f)
+
+        val path = Path().apply {
+            moveTo(7.8f * (w / 24f), 4.2f * (h / 24f))
+            lineTo(16.2f * (w / 24f), 4.2f * (h / 24f))
+            lineTo(17.8f * (w / 24f), 5.0f * (h / 24f))
+            lineTo(17.8f * (w / 24f), 19.3f * (h / 24f))
+            lineTo(12.0f * (w / 24f), 15.4f * (h / 24f))
+            lineTo(6.2f * (w / 24f), 19.3f * (h / 24f))
+            lineTo(6.2f * (w / 24f), 5.0f * (h / 24f))
+            close()
+        }
+
+        if (filled) {
+            drawPath(path = path, color = tint, style = Fill)
+        } else {
+            drawPath(
+                path = path,
+                color = tint,
+                style = Stroke(width = strokeW, cap = StrokeCap.Round, join = StrokeJoin.Round)
             )
         }
-        drawPath(path = cloakPath, color = tint, style = Stroke(width = strokeW, cap = StrokeCap.Round))
+    }
+}
 
-        if (isSelected) {
-            val filledCloak = Path().apply {
-                moveTo(w * 0.18f, h * 0.86f)
-                cubicTo(
-                    w * 0.20f, h * 0.52f,
-                    w * 0.68f, h * 0.52f,
-                    w * 0.70f, h * 0.86f
-                )
-                close()
-            }
-            drawPath(path = filledCloak, color = tint.copy(alpha = 0.22f), style = Fill)
-        }
+/**
+ * 07 — Calendar Icon: Codex calendar with binder rings
+ * SVG: rect x=4 y=6 width=16 height=14 rx=3.5; path d="M8 4v4M16 4v4M4 11h16"; circle cx=9 cy=15.3 r=1
+ */
+@Composable
+fun MekanatIconCalendar(
+    modifier: Modifier = Modifier,
+    size: Dp = 24.dp,
+    tint: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val w = this.size.width
+        val h = this.size.height
+        val strokeW = 1.75f * (w / 24f)
+        val strokeStyle = Stroke(width = strokeW, cap = StrokeCap.Round, join = StrokeJoin.Round)
 
-        // Pilgrim Walking Staff with T-Cross (Maqomiya)
-        val staffX = w * 0.82f
+        // Rect x=4 y=6 w=16 h=14 rx=3.5
+        drawRoundRect(
+            color = tint,
+            topLeft = Offset(4f * (w / 24f), 6f * (h / 24f)),
+            size = Size(16f * (w / 24f), 14f * (h / 24f)),
+            cornerRadius = CornerRadius(3.5f * (w / 24f), 3.5f * (h / 24f)),
+            style = strokeStyle
+        )
+
+        // Binder rings: M8 4v4, M16 4v4
         drawLine(
             color = tint,
-            start = Offset(staffX, h * 0.15f),
-            end = Offset(staffX, h * 0.90f),
+            start = Offset(8f * (w / 24f), 4f * (h / 24f)),
+            end = Offset(8f * (w / 24f), 8f * (h / 24f)),
             strokeWidth = strokeW,
             cap = StrokeCap.Round
         )
-        // Staff T-top
         drawLine(
             color = tint,
-            start = Offset(staffX - w * 0.08f, h * 0.15f),
-            end = Offset(staffX + w * 0.08f, h * 0.15f),
+            start = Offset(16f * (w / 24f), 4f * (h / 24f)),
+            end = Offset(16f * (w / 24f), 8f * (h / 24f)),
+            strokeWidth = strokeW,
+            cap = StrokeCap.Round
+        )
+
+        // Divider: M4 11h16
+        drawLine(
+            color = tint,
+            start = Offset(4f * (w / 24f), 11f * (h / 24f)),
+            end = Offset(20f * (w / 24f), 11f * (h / 24f)),
+            strokeWidth = strokeW,
+            cap = StrokeCap.Round
+        )
+
+        // Dot: cx=9, cy=15.3, r=1
+        drawCircle(
+            color = tint,
+            radius = 1.2f * (w / 24f),
+            center = Offset(9f * (w / 24f), 15.3f * (h / 24f))
+        )
+    }
+}
+
+/**
+ * 07 — Profile Icon: Head & shoulder arc
+ * SVG: circle cx=12 cy=9 r=3.3; path d="M5.3 20c1-3.6 4-5.4 6.7-5.4s5.7 1.8 6.7 5.4"
+ */
+@Composable
+fun MekanatIconProfile(
+    modifier: Modifier = Modifier,
+    size: Dp = 24.dp,
+    tint: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val w = this.size.width
+        val h = this.size.height
+        val strokeW = 1.75f * (w / 24f)
+        val strokeStyle = Stroke(width = strokeW, cap = StrokeCap.Round, join = StrokeJoin.Round)
+
+        // Circle: cx=12, cy=9, r=3.3
+        drawCircle(
+            color = tint,
+            radius = 3.3f * (w / 24f),
+            center = Offset(12f * (w / 24f), 9f * (h / 24f)),
+            style = strokeStyle
+        )
+
+        // Shoulder arc: M5.3 20 c1 -3.6 4 -5.4 6.7 -5.4 s5.7 1.8 6.7 5.4
+        val path = Path().apply {
+            moveTo(5.3f * (w / 24f), 20f * (h / 24f))
+            cubicTo(
+                6.3f * (w / 24f), 16.4f * (h / 24f),
+                9.3f * (w / 24f), 14.6f * (h / 24f),
+                12.0f * (w / 24f), 14.6f * (h / 24f)
+            )
+            cubicTo(
+                14.7f * (w / 24f), 14.6f * (h / 24f),
+                17.7f * (w / 24f), 16.4f * (h / 24f),
+                18.7f * (w / 24f), 20f * (h / 24f)
+            )
+        }
+        drawPath(path = path, color = tint, style = strokeStyle)
+    }
+}
+
+/**
+ * 07 — Search Icon: Magnifying glass
+ * SVG: circle cx=10.3 cy=10.3 r=6.3; path d="M19 19l-3.8-3.8"
+ */
+@Composable
+fun MekanatIconSearch(
+    modifier: Modifier = Modifier,
+    size: Dp = 24.dp,
+    tint: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val w = this.size.width
+        val h = this.size.height
+        val strokeW = 1.75f * (w / 24f)
+        val strokeStyle = Stroke(width = strokeW, cap = StrokeCap.Round, join = StrokeJoin.Round)
+
+        drawCircle(
+            color = tint,
+            radius = 6.3f * (w / 24f),
+            center = Offset(10.3f * (w / 24f), 10.3f * (h / 24f)),
+            style = strokeStyle
+        )
+        drawLine(
+            color = tint,
+            start = Offset(15.2f * (w / 24f), 15.2f * (h / 24f)),
+            end = Offset(19.0f * (w / 24f), 19.0f * (h / 24f)),
             strokeWidth = strokeW,
             cap = StrokeCap.Round
         )
     }
+}
+
+/**
+ * 07 — Filter Icon: Funnel filter
+ * SVG: path d="M4 5.5h16l-6.2 7.3v5.2l-3.6 1.8v-7z"
+ */
+@Composable
+fun MekanatIconFilter(
+    modifier: Modifier = Modifier,
+    size: Dp = 24.dp,
+    tint: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val w = this.size.width
+        val h = this.size.height
+        val strokeW = 1.75f * (w / 24f)
+
+        val path = Path().apply {
+            moveTo(4.0f * (w / 24f), 5.5f * (h / 24f))
+            lineTo(20.0f * (w / 24f), 5.5f * (h / 24f))
+            lineTo(13.8f * (w / 24f), 12.8f * (h / 24f))
+            lineTo(13.8f * (w / 24f), 18.0f * (h / 24f))
+            lineTo(10.2f * (w / 24f), 19.8f * (h / 24f))
+            lineTo(10.2f * (w / 24f), 12.8f * (h / 24f))
+            close()
+        }
+        drawPath(
+            path = path,
+            color = tint,
+            style = Stroke(width = strokeW, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        )
+    }
+}
+
+/**
+ * 07 — Recenter GPS Icon: Reticle crosshair with center point
+ * SVG: circle cx=12 cy=12 r=2.2; path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3"; circle cx=12 cy=12 r=7.2
+ */
+@Composable
+fun MekanatIconRecenter(
+    modifier: Modifier = Modifier,
+    size: Dp = 24.dp,
+    tint: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val w = this.size.width
+        val h = this.size.height
+        val strokeW = 1.75f * (w / 24f)
+        val strokeStyle = Stroke(width = strokeW, cap = StrokeCap.Round, join = StrokeJoin.Round)
+
+        // Center dot
+        drawCircle(
+            color = tint,
+            radius = 2.2f * (w / 24f),
+            center = Offset(12f * (w / 24f), 12f * (h / 24f)),
+            style = Fill
+        )
+
+        // Outer ring
+        drawCircle(
+            color = tint,
+            radius = 7.2f * (w / 24f),
+            center = Offset(12f * (w / 24f), 12f * (h / 24f)),
+            style = strokeStyle
+        )
+
+        // Crosshairs
+        drawLine(color = tint, start = Offset(12f * (w / 24f), 2.8f * (h / 24f)), end = Offset(12f * (w / 24f), 5.8f * (h / 24f)), strokeWidth = strokeW, cap = StrokeCap.Round)
+        drawLine(color = tint, start = Offset(12f * (w / 24f), 18.2f * (h / 24f)), end = Offset(12f * (w / 24f), 21.2f * (h / 24f)), strokeWidth = strokeW, cap = StrokeCap.Round)
+        drawLine(color = tint, start = Offset(2.8f * (w / 24f), 12f * (h / 24f)), end = Offset(5.8f * (w / 24f), 12f * (h / 24f)), strokeWidth = strokeW, cap = StrokeCap.Round)
+        drawLine(color = tint, start = Offset(18.2f * (w / 24f), 12f * (h / 24f)), end = Offset(21.2f * (w / 24f), 12f * (h / 24f)), strokeWidth = strokeW, cap = StrokeCap.Round)
+    }
+}
+
+/**
+ * 07 — Route Wayfinding Icon: Clean wayfinding path connecting starting waypoint node to destination pin
+ */
+@Composable
+fun MekanatIconRoute(
+    modifier: Modifier = Modifier,
+    size: Dp = 24.dp,
+    tint: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val w = this.size.width
+        val h = this.size.height
+        val strokeW = 2.0f * (w / 24f)
+        val strokeStyle = Stroke(width = strokeW, cap = StrokeCap.Round, join = StrokeJoin.Round)
+
+        // Starting Waypoint Ring & Node (bottom-left)
+        drawCircle(
+            color = tint,
+            radius = 2.6f * (w / 24f),
+            center = Offset(6f * (w / 24f), 18f * (h / 24f)),
+            style = strokeStyle
+        )
+        drawCircle(
+            color = tint,
+            radius = 1.2f * (w / 24f),
+            center = Offset(6f * (w / 24f), 18f * (h / 24f)),
+            style = Fill
+        )
+
+        // Destination Waypoint Pin (top-right)
+        val destPinPath = Path().apply {
+            moveTo(18f * (w / 24f), 12.5f * (h / 24f))
+            cubicTo(
+                14.5f * (w / 24f), 9.0f * (h / 24f),
+                14.5f * (w / 24f), 4.5f * (h / 24f),
+                18f * (w / 24f), 4.5f * (h / 24f)
+            )
+            cubicTo(
+                21.5f * (w / 24f), 4.5f * (h / 24f),
+                21.5f * (w / 24f), 9.0f * (h / 24f),
+                18f * (w / 24f), 12.5f * (h / 24f)
+            )
+            close()
+        }
+        drawPath(path = destPinPath, color = tint, style = strokeStyle)
+        drawCircle(
+            color = tint,
+            radius = 1.2f * (w / 24f),
+            center = Offset(18f * (w / 24f), 7.2f * (h / 24f)),
+            style = Fill
+        )
+
+        // S-Curve Connection Highway
+        val routePath = Path().apply {
+            moveTo(6f * (w / 24f), 15.2f * (h / 24f))
+            cubicTo(
+                6f * (w / 24f), 10.5f * (h / 24f),
+                18f * (w / 24f), 16.5f * (h / 24f),
+                18f * (w / 24f), 12.5f * (h / 24f)
+            )
+        }
+        drawPath(
+            path = routePath,
+            color = tint,
+            style = Stroke(
+                width = strokeW,
+                cap = StrokeCap.Round,
+                join = StrokeJoin.Round,
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f * (w / 24f), 3.5f * (w / 24f)), 0f)
+            )
+        )
+    }
+}
+
+/**
+ * 07 — Favorite / Gold Flame Icon: Drop flame
+ * SVG: path d="M12 3.3c-2.1 2.9-4.9 4.8-4.9 8.4a4.9 4.9 0 0 0 9.8 0c0-1.8-.9-2.9-1.9-3.8.3 1.4-.5 1.9-1 1.1-.6-1-1-2.6-2-5.7z"
+ */
+@Composable
+fun MekanatIconFavorite(
+    modifier: Modifier = Modifier,
+    size: Dp = 24.dp,
+    tint: Color = MaterialTheme.colorScheme.onSurface,
+    filled: Boolean = false
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val w = this.size.width
+        val h = this.size.height
+        val strokeW = 1.75f * (w / 24f)
+
+        val path = Path().apply {
+            moveTo(12f * (w / 24f), 3.3f * (h / 24f))
+            cubicTo(9.9f * (w / 24f), 6.2f * (h / 24f), 7.1f * (w / 24f), 8.1f * (h / 24f), 7.1f * (w / 24f), 11.7f * (h / 24f))
+            cubicTo(7.1f * (w / 24f), 14.4f * (h / 24f), 9.3f * (w / 24f), 16.6f * (h / 24f), 12.0f * (w / 24f), 16.6f * (h / 24f))
+            cubicTo(14.7f * (w / 24f), 16.6f * (h / 24f), 16.9f * (w / 24f), 14.4f * (h / 24f), 16.9f * (w / 24f), 11.7f * (h / 24f))
+            cubicTo(16.9f * (w / 24f), 9.9f * (h / 24f), 16.0f * (w / 24f), 8.8f * (h / 24f), 15.0f * (w / 24f), 7.9f * (h / 24f))
+            cubicTo(15.3f * (w / 24f), 9.3f * (h / 24f), 14.5f * (w / 24f), 9.8f * (h / 24f), 14.0f * (w / 24f), 9.0f * (h / 24f))
+            cubicTo(13.4f * (w / 24f), 8.0f * (h / 24f), 13.0f * (w / 24f), 6.4f * (h / 24f), 12.0f * (w / 24f), 3.3f * (h / 24f))
+            close()
+        }
+
+        if (filled) {
+            drawPath(path = path, color = tint, style = Fill)
+        } else {
+            drawPath(
+                path = path,
+                color = tint,
+                style = Stroke(width = strokeW, cap = StrokeCap.Round, join = StrokeJoin.Round)
+            )
+        }
+    }
+}
+
+/**
+ * 07 — Live Event Broadcast Waves Icon
+ * SVG: circle cx=12 cy=12 r=1.5; path d="M8.6 8.6a5 5 0 0 1 6.8 0" opacity=.85; path d="M6 6a9 9 0 0 1 12 0" opacity=.45
+ */
+@Composable
+fun MekanatIconLiveEvent(
+    modifier: Modifier = Modifier,
+    size: Dp = 24.dp,
+    tint: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val w = this.size.width
+        val h = this.size.height
+        val strokeW = 1.75f * (w / 24f)
+
+        // Center dot
+        drawCircle(color = tint, radius = 1.8f * (w / 24f), center = Offset(12f * (w / 24f), 13f * (h / 24f)), style = Fill)
+
+        // Inner arc
+        val innerPath = Path().apply {
+            moveTo(8.6f * (w / 24f), 9.6f * (h / 24f))
+            cubicTo(10.0f * (w / 24f), 7.8f * (h / 24f), 14.0f * (w / 24f), 7.8f * (h / 24f), 15.4f * (w / 24f), 9.6f * (h / 24f))
+        }
+        drawPath(path = innerPath, color = tint.copy(alpha = 0.9f), style = Stroke(width = strokeW, cap = StrokeCap.Round))
+
+        // Outer arc
+        val outerPath = Path().apply {
+            moveTo(6.0f * (w / 24f), 7.0f * (h / 24f))
+            cubicTo(8.0f * (w / 24f), 4.2f * (h / 24f), 16.0f * (w / 24f), 4.2f * (h / 24f), 18.0f * (w / 24f), 7.0f * (h / 24f))
+        }
+        drawPath(path = outerPath, color = tint.copy(alpha = 0.55f), style = Stroke(width = strokeW, cap = StrokeCap.Round))
+    }
+}
+
+/**
+ * 07 — Back Icon: Angle arrow
+ * SVG: path d="M15 5l-6.5 7L15 19"
+ */
+@Composable
+fun MekanatIconBack(
+    modifier: Modifier = Modifier,
+    size: Dp = 24.dp,
+    tint: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val w = this.size.width
+        val h = this.size.height
+        val strokeW = 1.75f * (w / 24f)
+
+        val path = Path().apply {
+            moveTo(15f * (w / 24f), 5f * (h / 24f))
+            lineTo(8.5f * (w / 24f), 12f * (h / 24f))
+            lineTo(15f * (w / 24f), 19f * (h / 24f))
+        }
+        drawPath(
+            path = path,
+            color = tint,
+            style = Stroke(width = strokeW, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        )
+    }
+}
+
+/**
+ * 07 — Share Icon: 3 Nodes Connected
+ * SVG: circle cx=6 cy=12 r=1.9; circle cx=18 cy=6 r=1.9; circle cx=18 cy=18 r=1.9; path d="M7.7 11l8.6-4M7.7 13l8.6 4"
+ */
+@Composable
+fun MekanatIconShare(
+    modifier: Modifier = Modifier,
+    size: Dp = 24.dp,
+    tint: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val w = this.size.width
+        val h = this.size.height
+        val strokeW = 1.75f * (w / 24f)
+        val strokeStyle = Stroke(width = strokeW, cap = StrokeCap.Round, join = StrokeJoin.Round)
+
+        drawCircle(color = tint, radius = 2.0f * (w / 24f), center = Offset(6f * (w / 24f), 12f * (h / 24f)), style = strokeStyle)
+        drawCircle(color = tint, radius = 2.0f * (w / 24f), center = Offset(18f * (w / 24f), 6f * (h / 24f)), style = strokeStyle)
+        drawCircle(color = tint, radius = 2.0f * (w / 24f), center = Offset(18f * (w / 24f), 18f * (h / 24f)), style = strokeStyle)
+
+        drawLine(color = tint, start = Offset(7.7f * (w / 24f), 11f * (h / 24f)), end = Offset(16.3f * (w / 24f), 7f * (h / 24f)), strokeWidth = strokeW, cap = StrokeCap.Round)
+        drawLine(color = tint, start = Offset(7.7f * (w / 24f), 13f * (h / 24f)), end = Offset(16.3f * (w / 24f), 17f * (h / 24f)), strokeWidth = strokeW, cap = StrokeCap.Round)
+    }
+}
+
+/**
+ * 07 — Close (X) Icon
+ */
+@Composable
+fun MekanatIconClose(
+    modifier: Modifier = Modifier,
+    size: Dp = 24.dp,
+    tint: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val w = this.size.width
+        val h = this.size.height
+        val strokeW = 1.75f * (w / 24f)
+
+        drawLine(color = tint, start = Offset(6f * (w / 24f), 6f * (h / 24f)), end = Offset(18f * (w / 24f), 18f * (h / 24f)), strokeWidth = strokeW, cap = StrokeCap.Round)
+        drawLine(color = tint, start = Offset(18f * (w / 24f), 6f * (h / 24f)), end = Offset(6f * (w / 24f), 18f * (h / 24f)), strokeWidth = strokeW, cap = StrokeCap.Round)
+    }
+}
+
+// Nav helpers for backwards compatibility
+@Composable
+fun NavSanctuaryIcon(isSelected: Boolean, modifier: Modifier = Modifier, size: Dp = 24.dp, tint: Color = MaterialTheme.colorScheme.primary) {
+    MekanatIconMap(modifier = modifier, size = size, tint = tint)
+}
+
+@Composable
+fun NavSavedIcon(isSelected: Boolean, modifier: Modifier = Modifier, size: Dp = 24.dp, tint: Color = MaterialTheme.colorScheme.primary) {
+    MekanatIconBookmarks(modifier = modifier, size = size, tint = tint, filled = isSelected)
+}
+
+@Composable
+fun NavCalendarIcon(isSelected: Boolean, modifier: Modifier = Modifier, size: Dp = 24.dp, tint: Color = MaterialTheme.colorScheme.primary) {
+    MekanatIconCalendar(modifier = modifier, size = size, tint = tint)
+}
+
+@Composable
+fun NavProfileIcon(isSelected: Boolean, modifier: Modifier = Modifier, size: Dp = 24.dp, tint: Color = MaterialTheme.colorScheme.primary) {
+    MekanatIconProfile(modifier = modifier, size = size, tint = tint)
 }
 
 private data class NavTabItem(
@@ -344,8 +789,8 @@ private data class NavTabItem(
 )
 
 /**
- * Minimalist, borderless Bottom Navigation Bar with subtle ambient shadow,
- * custom SVG vector icons, and smooth haptic feedback.
+ * 09 — Navigation: Four tabs, one active accent (Ember #FF5A1F)
+ * Consistent, purposeful, never decorative.
  */
 @Composable
 fun MekanatBottomBar(
@@ -358,100 +803,103 @@ fun MekanatBottomBar(
     val tabs = listOf(
         NavTabItem(
             index = 0,
-            label = "Sanctuaries",
+            label = "Map",
             testTag = "nav_tab_map",
-            icon = { isSelected, tint ->
-                NavSanctuaryIcon(isSelected = isSelected, tint = tint, size = 24.dp)
-            }
+            icon = { isSelected, tint -> MekanatIconMap(tint = tint) }
         ),
         NavTabItem(
             index = 1,
-            label = "Saved",
+            label = "Bookmarks",
             testTag = "nav_tab_bookmarks",
-            icon = { isSelected, tint ->
-                NavSavedIcon(isSelected = isSelected, tint = tint, size = 24.dp)
-            }
+            icon = { isSelected, tint -> MekanatIconBookmarks(tint = tint, filled = isSelected) }
         ),
         NavTabItem(
             index = 2,
             label = "Calendar",
             testTag = "nav_tab_calendar",
-            icon = { isSelected, tint ->
-                NavCalendarIcon(isSelected = isSelected, tint = tint, size = 24.dp)
-            }
+            icon = { isSelected, tint -> MekanatIconCalendar(tint = tint) }
         ),
         NavTabItem(
             index = 3,
-            label = "Pilgrim",
+            label = "Profile",
             testTag = "nav_tab_profile",
-            icon = { isSelected, tint ->
-                NavProfileIcon(isSelected = isSelected, tint = tint, size = 24.dp)
-            }
+            icon = { isSelected, tint -> MekanatIconProfile(tint = tint) }
         )
     )
 
-    Surface(
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 0.dp,
-        shadowElevation = 8.dp, // Clean, subtle ambient shadow
-        shape = RectangleShape,
-        // Completely borderless - no BorderStroke
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .testTag("bottom_navigation_bar")
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .testTag("bottom_navigation_bar"),
+        contentAlignment = Alignment.Center
     ) {
-        Row(
+        Surface(
+            shape = RoundedCornerShape(22.dp),
+            color = MaterialTheme.colorScheme.surface,
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+            shadowElevation = 4.dp,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(60.dp)
-                .padding(horizontal = 8.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
         ) {
-            tabs.forEach { tab ->
-                val isSelected = currentTab == tab.index
-                val animatedTint by animateColorAsState(
-                    targetValue = if (isSelected) SignalRed else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    animationSpec = tween(durationMillis = 180),
-                    label = "navItemTint"
-                )
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                tabs.forEach { tab ->
+                    val isSelected = currentTab == tab.index
 
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        ) {
-                            haptic.vibrateClick()
-                            onTabSelected(tab.index)
-                        }
-                        .testTag(tab.testTag),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                    val contentColor by animateColorAsState(
+                        targetValue = if (isSelected)
+                            BrandEmber
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
+                        animationSpec = tween(180),
+                        label = "tabContentColor"
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(16.dp))
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {
+                                haptic.vibrateClick()
+                                onTabSelected(tab.index)
+                            }
+                            .testTag(tab.testTag),
+                        contentAlignment = Alignment.Center
                     ) {
-                        tab.icon(isSelected, animatedTint)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            tab.icon(isSelected, contentColor)
 
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        // Clean micro-indicator pill below the icon
-                        Box(
-                            modifier = Modifier
-                                .size(width = 14.dp, height = 2.5.dp)
-                                .background(
-                                    color = if (isSelected) SignalRed else Color.Transparent,
-                                    shape = RoundedCornerShape(2.dp)
+                            if (isSelected) {
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = tab.label,
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        fontSize = 11.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = contentColor
+                                    ),
+                                    maxLines = 1
                                 )
-                        )
+                            }
+                        }
                     }
                 }
             }
         }
     }
 }
-

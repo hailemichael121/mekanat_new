@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
         ChurchPhotoEntity::class,
         SearchHistoryEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class MekanatDatabase : RoomDatabase() {
@@ -41,7 +41,9 @@ abstract class MekanatDatabase : RoomDatabase() {
                     context.applicationContext,
                     MekanatDatabase::class.java,
                     "mekanat_orthodox.db"
-                ).addCallback(object : Callback() {
+                )
+                .fallbackToDestructiveMigration()
+                .addCallback(object : Callback() {
                     override fun onCreate(db: SupportSQLiteDatabase) {
                         super.onCreate(db)
                         // Seed database asynchronously

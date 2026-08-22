@@ -90,28 +90,24 @@ data class VisibleTile(
  */
 enum class GebetaTravelMode(
     val title: String,
-    val iconEmoji: String,
     val apiSlug: String,
     val avgSpeedKmH: Double,
     val description: String
 ) {
     DRIVING(
         title = "Driving",
-        iconEmoji = "🚗",
         apiSlug = "driving",
         avgSpeedKmH = 48.0,
         description = "Highways & ring roads"
     ),
     WALKING(
         title = "Walking Pilgrimage",
-        iconEmoji = "🚶‍♂️",
         apiSlug = "walking",
         avgSpeedKmH = 4.8,
         description = "Pedestrian paths & stairs"
     ),
     TRANSIT(
         title = "Transit / Bus",
-        iconEmoji = "🚐",
         apiSlug = "transit",
         avgSpeedKmH = 32.0,
         description = "Minibus & public lines"
@@ -425,24 +421,36 @@ class GebetaMapService private constructor(private val context: Context) {
             client: OkHttpClient?
         ): GebetaRouteResult? {
             val okClient = client ?: OkHttpClient.Builder()
-                .connectTimeout(5, TimeUnit.SECONDS)
-                .readTimeout(5, TimeUnit.SECONDS)
+                .connectTimeout(6, TimeUnit.SECONDS)
+                .readTimeout(6, TimeUnit.SECONDS)
                 .build()
 
+            val apiKey = try {
+                BuildConfig::class.java.getField("GEBETA_API_KEY").get(null) as? String ?: ""
+            } catch (e: Exception) {
+                ""
+            }
+
+            val keyParam = if (apiKey.isNotBlank()) "&apiKey=$apiKey" else ""
+
             val urls = listOf(
-                "https://api.gebeta.app/api/v1/route/${mode.apiSlug}/direction?origin=$originLat,$originLng&destination=$destLat,$destLng",
-                "https://mapapi.gebeta.app/api/route/direction/?origin=$originLat,$originLng&destination=$destLat,$destLng&mode=${mode.apiSlug}"
+                "https://api.gebeta.app/api/v1/route/${mode.apiSlug}/direction?origin=$originLat,$originLng&destination=$destLat,$destLng$keyParam",
+                "https://mapapi.gebeta.app/api/route/direction/?origin=$originLat,$originLng&destination=$destLat,$destLng&mode=${mode.apiSlug}$keyParam",
+                "https://api.gebeta.app/api/route/driving/direction?origin=$originLat,$originLng&destination=$destLat,$destLng$keyParam"
             )
 
             for (url in urls) {
                 try {
-                    val request = Request.Builder()
+                    val reqBuilder = Request.Builder()
                         .url(url)
                         .header("User-Agent", "Mekanat-EthiopianOrthodox/1.0 (Android; GebetaMaps)")
                         .header("Accept", "application/json")
-                        .build()
 
-                    val response = okClient.newCall(request).execute()
+                    if (apiKey.isNotBlank()) {
+                        reqBuilder.header("Authorization", "Bearer $apiKey")
+                    }
+
+                    val response = okClient.newCall(reqBuilder.build()).execute()
                     if (response.isSuccessful) {
                         val body = response.body?.string()
                         if (!body.isNullOrBlank()) {
@@ -499,7 +507,7 @@ class GebetaMapService private constructor(private val context: Context) {
                             val dist = item.optDouble("distance", 100.0) / 1000.0
                             val dur = (item.optDouble("duration", 60.0) / 60.0).toInt().coerceAtLeast(1)
                             val maneuver = item.optString("maneuver", "straight")
-                            val street = item.optString("street_name", null)
+                            val street = if (item.has("street_name")) item.optString("street_name") else null
                             steps.add(
                                 GebetaRouteStep(
                                     stepNumber = i + 1,

@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mekanät — Brand & Theme System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+Ethiopic:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#121214; --paper:#F6F4F0;
+    --ember:#FF5A1F; --ember-ink:#7A2A0C;
+    --teal:#0FB2A0; --teal-ink:#083C36;
+    --crimson:#E1344F; --gold:#F2B705;
+    --radius:14px;
+  }
+  [data-theme="light"]{
+    --bg:#F6F4F0; --bg-elev:#FFFFFF; --bg-sunk:#EDEAE4;
+    --text:#15140F; --text-dim:#6B675E; --border:#E2DED4;
+    --pin:#15140F; --shadow:0 1px 2px rgba(20,18,10,.06), 0 8px 24px rgba(20,18,10,.05);
+  }
+  [data-theme="dark"]{
+    --bg:#0E0D0C; --bg-elev:#181613; --bg-sunk:#221F1B;
+    --text:#F3F1EA; --text-dim:#9A9488; --border:#2D2A24;
+    --pin:#F3F1EA; --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 28px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:'Inter',sans-serif; transition:background .35s ease, color .35s ease;
+    padding-bottom:80px;
+  }
+  h1,h2,h3,.display{ font-family:'Space Grotesk',sans-serif; letter-spacing:-0.02em; }
+  .mono{ font-family:'IBM Plex Mono',monospace; letter-spacing:0; }
+  .ethiopic{ font-family:'Noto Sans Ethiopic',sans-serif; }
+
+  .wrap{ max-width:960px; margin:0 auto; padding:0 24px; }
+
+  /* header */
+  .topbar{
+    position:sticky; top:0; z-index:20; backdrop-filter:blur(10px);
+    background:color-mix(in srgb, var(--bg) 82%, transparent);
+    border-bottom:1px solid var(--border);
+  }
+  .topbar-inner{ display:flex; align-items:center; justify-content:space-between; padding:16px 24px; max-width:960px; margin:0 auto; }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand-mark{ width:34px; height:34px; border-radius:10px; background:var(--ember); display:flex; align-items:center; justify-content:center; color:#fff; font-family:'Space Grotesk'; font-weight:700; font-size:18px; }
+  .brand-name{ font-family:'Space Grotesk'; font-weight:700; font-size:18px; }
+  .brand-sub{ font-size:11px; color:var(--text-dim); margin-top:-2px; }
+
+  .toggle{
+    display:flex; align-items:center; gap:8px; background:var(--bg-sunk);
+    border:1px solid var(--border); border-radius:999px; padding:4px; cursor:pointer; user-select:none;
+  }
+  .toggle button{
+    border:none; background:transparent; padding:7px 14px; border-radius:999px; font-size:13px; font-weight:600;
+    color:var(--text-dim); cursor:pointer; font-family:'Inter';
+  }
+  .toggle button.active{ background:var(--ink); color:var(--paper); }
+  [data-theme="dark"] .toggle button.active{ background:var(--paper); color:var(--ink); }
+
+  section{ padding:56px 0; border-bottom:1px solid var(--border); }
+  .eyebrow{ font-family:'IBM Plex Mono'; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ember); margin-bottom:10px; }
+  .sec-title{ font-size:28px; font-weight:700; margin-bottom:8px; }
+  .sec-desc{ color:var(--text-dim); font-size:15px; max-width:560px; margin-bottom:32px; line-height:1.55; }
+
+  /* hero */
+  .hero{ padding:72px 0 48px; }
+  .hero h1{ font-size:44px; font-weight:700; line-height:1.05; max-width:640px; }
+  .hero p{ margin-top:16px; color:var(--text-dim); font-size:17px; max-width:520px; line-height:1.6; }
+  .hero-amharic{ font-size:20px; margin-top:18px; color:var(--text-dim); }
+
+  /* palette */
+  .swatch-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; }
+  .swatch{ border-radius:var(--radius); overflow:hidden; border:1px solid var(--border); }
+  .swatch-fill{ height:88px; }
+  .swatch-meta{ padding:12px 14px; background:var(--bg-elev); }
+  .swatch-name{ font-weight:600; font-size:13px; }
+  .swatch-hex{ font-family:'IBM Plex Mono'; font-size:11px; color:var(--text-dim); margin-top:2px; }
+  .swatch-use{ font-size:11px; color:var(--text-dim); margin-top:6px; line-height:1.4; }
+
+  /* type */
+  .type-row{ display:flex; align-items:baseline; gap:18px; padding:18px 0; border-bottom:1px solid var(--border); }
+  .type-row:last-child{ border-bottom:none; }
+  .type-label{ font-family:'IBM Plex Mono'; font-size:11px; color:var(--text-dim); width:110px; flex-shrink:0; text-transform:uppercase; letter-spacing:.08em; }
+  .type-sample-lg{ font-size:32px; font-weight:700; }
+  .type-sample-md{ font-size:20px; font-weight:600; }
+  .type-sample-sm{ font-size:15px; color:var(--text-dim); }
+
+  /* buttons */
+  .btn-grid{ display:flex; flex-wrap:wrap; gap:14px; align-items:center; }
+  .btn{
+    border:none; border-radius:12px; padding:13px 22px; font-family:'Inter'; font-weight:600; font-size:14px;
+    cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:transform .15s ease, filter .15s ease;
+  }
+  .btn:active{ transform:scale(.97); }
+  .btn-primary{ background:var(--ember); color:#fff; }
+  .btn-primary:hover{ filter:brightness(1.08); }
+  .btn-secondary{ background:transparent; color:var(--text); border:1.5px solid var(--border); }
+  .btn-ghost{ background:var(--bg-sunk); color:var(--text); }
+  .btn-route{ background:var(--teal); color:#fff; }
+  .btn-danger-outline{ background:transparent; color:var(--crimson); border:1.5px solid var(--crimson); }
+  .btn-disabled{ background:var(--bg-sunk); color:var(--text-dim); cursor:not-allowed; }
+
+  .icon-btn{ width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1.5px solid var(--border); background:var(--bg-elev); cursor:pointer; }
+  .icon-btn.filled{ background:var(--gold); border-color:var(--gold); color:#3A2A00; }
+
+  /* cards */
+  .card-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; }
+  .church-card{
+    background:var(--bg-elev); border:1px solid var(--border); border-radius:var(--radius);
+    padding:18px; box-shadow:var(--shadow);
+  }
+  .church-card-top{ display:flex; justify-content:space-between; align-items:flex-start; }
+  .church-name{ font-family:'Space Grotesk'; font-weight:700; font-size:17px; }
+  .church-meta{ font-size:12px; color:var(--text-dim); margin-top:3px; }
+  .distance-pill{ font-family:'IBM Plex Mono'; font-size:11px; background:var(--bg-sunk); padding:5px 10px; border-radius:999px; white-space:nowrap; }
+  .tag-row{ display:flex; gap:6px; margin-top:12px; flex-wrap:wrap; }
+  .tag{ font-size:11px; padding:5px 10px; border-radius:999px; border:1px solid var(--border); color:var(--text-dim); }
+  .tag.nigs{ color:var(--ember-ink); border-color:var(--ember); background:color-mix(in srgb, var(--ember) 12%, transparent); }
+  [data-theme="dark"] .tag.nigs{ color:#FFC7A8; }
+  .live-banner{
+    margin-top:12px; display:flex; align-items:center; gap:10px; background:color-mix(in srgb, var(--crimson) 14%, transparent);
+    border:1px solid var(--crimson); color:var(--crimson); padding:9px 12px; border-radius:10px; font-size:12px; font-weight:600;
+  }
+  .pulse-dot{ width:8px; height:8px; border-radius:50%; background:var(--crimson); animation:pulse 1.6s infinite; flex-shrink:0; }
+  @keyframes pulse{ 0%{ box-shadow:0 0 0 0 rgba(225,52,79,.55);} 70%{ box-shadow:0 0 0 9px rgba(225,52,79,0);} 100%{ box-shadow:0 0 0 0 rgba(225,52,79,0);} }
+
+  /* map pin demo */
+  .map-demo{
+    background:var(--bg-sunk); border-radius:var(--radius); height:220px; position:relative; overflow:hidden; border:1px solid var(--border);
+  }
+  .grid-lines{ position:absolute; inset:0; background-image:linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size:32px 32px; opacity:.5; }
+  .user-dot{ position:absolute; left:38%; top:55%; width:16px; height:16px; border-radius:50%; background:var(--teal); border:3px solid var(--bg-elev); box-shadow:0 0 0 0 rgba(15,178,160,.5); animation:glow 2s infinite; }
+  @keyframes glow{ 0%{ box-shadow:0 0 0 0 rgba(15,178,160,.45);} 70%{ box-shadow:0 0 0 16px rgba(15,178,160,0);} 100%{ box-shadow:0 0 0 0 rgba(15,178,160,0);} }
+  .pin{ position:absolute; width:14px; height:14px; border-radius:50% 50% 50% 0; background:var(--pin); transform:rotate(-45deg); }
+  .pin.live{ background:var(--crimson); }
+  .pin.selected{ background:var(--ember); width:18px; height:18px; }
+
+  /* icon system */
+  .icon{ width:22px; height:22px; stroke:currentColor; stroke-width:1.75; fill:none; stroke-linecap:round; stroke-linejoin:round; display:block; }
+  .icon.filled-part{ fill:currentColor; }
+  .icon-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(112px,1fr)); gap:12px; }
+  .icon-tile{ background:var(--bg-elev); border:1px solid var(--border); border-radius:var(--radius); padding:18px 10px; display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .icon-tile .icon{ width:24px; height:24px; color:var(--text); }
+  .icon-tile-label{ font-size:11px; color:var(--text-dim); text-align:center; font-weight:500; }
+
+  /* search bar mockup */
+  .searchbar{ display:flex; align-items:center; gap:10px; background:var(--bg-elev); border:1.5px solid var(--border); border-radius:16px; padding:13px 16px; box-shadow:var(--shadow); max-width:420px; }
+  .searchbar .icon{ color:var(--text-dim); width:19px; height:19px; flex-shrink:0; }
+  .searchbar input{ border:none; outline:none; background:transparent; font-family:'Inter'; font-size:14px; color:var(--text); flex:1; }
+  .searchbar input::placeholder{ color:var(--text-dim); }
+  .searchbar .icon-btn{ width:34px; height:34px; }
+  .searchbar .icon-btn .icon{ width:16px; height:16px; color:var(--text); }
+
+  /* page header mockup */
+  .page-header{ display:flex; align-items:center; justify-content:space-between; background:var(--bg-elev); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; max-width:420px; }
+  .page-header .icon{ color:var(--text); width:20px; height:20px; }
+  .page-header .title{ font-family:'Space Grotesk'; font-weight:700; font-size:15px; }
+  .header-side{ display:flex; align-items:center; gap:14px; width:20px; }
+  .header-side:last-child{ justify-content:flex-end; }
+
+  /* nav bar */
+  .navbar-demo{
+    display:flex; justify-content:space-around; background:var(--bg-elev); border:1px solid var(--border);
+    border-radius:20px; padding:10px 8px; box-shadow:var(--shadow); max-width:420px;
+  }
+  .nav-item{ display:flex; flex-direction:column; align-items:center; gap:5px; font-size:10px; color:var(--text-dim); font-weight:600; }
+  .nav-item .icon{ width:22px; height:22px; color:var(--text-dim); }
+  .nav-item.active{ color:var(--ember); }
+  .nav-item.active .icon{ color:var(--ember); }
+
+  footer{ padding:40px 0; text-align:center; color:var(--text-dim); font-size:12px; }
+</style>
+</head>
+<body data-theme="light">
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-mark">M</div>
+      <div>
+        <div class="brand-name">Mekanät</div>
+        <div class="brand-sub">Brand & Theme System</div>
+      </div>
+    </div>
+    <div class="toggle" id="toggle">
+      <button id="btn-light" class="active">Light</button>
+      <button id="btn-dark">Dark</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section class="hero">
+    <div class="eyebrow">01 — Identity</div>
+    <h1>A map-first identity. Monochrome ground, purposeful color.</h1>
+    <p>Black-and-paper neutrals carry the interface. Color is never decorative — each hue is assigned one job: orientation, action, or alert. Nothing is styled "Orthodox" for its own sake; the restraint is the design.</p>
+    <div class="hero-amharic ethiopic">መካናት — የኢትዮጵያ ኦርቶዶክስ አብያተ ክርስቲያናትን ያግኙ።</div>
+  </section>
+
+  <section>
+    <div class="eyebrow">02 — Palette</div>
+    <h2 class="sec-title">Functional color, not theme color</h2>
+    <p class="sec-desc">Six tokens total. Ink and Paper are the interface. The four accents each mean one specific thing everywhere in the app — a user should be able to read app state by color alone.</p>
+    <div class="swatch-grid">
+      <div class="swatch">
+        <div class="swatch-fill" style="background:#121214"></div>
+        <div class="swatch-meta"><div class="swatch-name">Ink</div><div class="swatch-hex">#121214</div><div class="swatch-use">Text, dark surfaces, default pins</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-fill" style="background:#F6F4F0; border-bottom:1px solid #eee"></div>
+        <div class="swatch-meta"><div class="swatch-name">Paper</div><div class="swatch-hex">#F6F4F0</div><div class="swatch-use">Light background</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-fill" style="background:#FF5A1F"></div>
+        <div class="swatch-meta"><div class="swatch-name">Ember</div><div class="swatch-hex">#FF5A1F</div><div class="swatch-use">Primary action, brand mark, selection</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-fill" style="background:#0FB2A0"></div>
+        <div class="swatch-meta"><div class="swatch-name">Wayfinding Teal</div><div class="swatch-hex">#0FB2A0</div><div class="swatch-use">GPS dot, route line, "Start route"</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-fill" style="background:#E1344F"></div>
+        <div class="swatch-meta"><div class="swatch-name">Crimson Pulse</div><div class="swatch-hex">#E1344F</div><div class="swatch-use">Live Gubae, urgent/soon Nigs</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-fill" style="background:#F2B705"></div>
+        <div class="swatch-meta"><div class="swatch-name">Gold Flame</div><div class="swatch-hex">#F2B705</div><div class="swatch-use">Saved / bookmark state only</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">03 — Typography</div>
+    <h2 class="sec-title">Space Grotesk + Inter + Plex Mono</h2>
+    <p class="sec-desc">A geometric display face gives the brand its edge, Inter carries all UI copy for maximum legibility, and a monospace face is reserved for data — distances, times, dates — so numbers read like instrumentation, not decoration. Ethiopic names get their own quiet typeface, never styled as calligraphy.</p>
+    <div class="type-row">
+      <div class="type-label">Display</div>
+      <div class="type-sample-lg">Find your sanctuary</div>
+    </div>
+    <div class="type-row">
+      <div class="type-label">UI / Body</div>
+      <div class="type-sample-md">3 churches found nearby</div>
+    </div>
+    <div class="type-row">
+      <div class="type-label">Data / Mono</div>
+      <div class="type-sample-md mono">2.7 km · 9 min</div>
+    </div>
+    <div class="type-row">
+      <div class="type-label">Ethiopic</div>
+      <div class="type-sample-md ethiopic">ኪዳነ ምሕረት · ገንቦት 16</div>
+    </div>
+    <div class="type-row">
+      <div class="type-label">Caption</div>
+      <div class="type-sample-sm">Diocese of Addis Ababa · Rock-hewn</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">04 — Buttons</div>
+    <h2 class="sec-title">One accent, one meaning</h2>
+    <p class="sec-desc">Primary is always Ember. Route actions are always Teal. Nothing else borrows those colors, so a button's color alone tells you what it will do.</p>
+    <div class="btn-grid">
+      <button class="btn btn-primary">View church</button>
+      <button class="btn btn-secondary">Save for later</button>
+      <button class="btn btn-ghost">Filter</button>
+      <button class="btn btn-route">▲ Start route</button>
+      <button class="btn btn-danger-outline">Report incorrect info</button>
+      <button class="btn btn-disabled" disabled>Submitted</button>
+      <div class="icon-btn">
+        <svg class="icon" viewBox="0 0 24 24" style="width:18px;height:18px;"><path d="M12 3.3c-2.1 2.9-4.9 4.8-4.9 8.4a4.9 4.9 0 0 0 9.8 0c0-1.8-.9-2.9-1.9-3.8.3 1.4-.5 1.9-1 1.1-.6-1-1-2.6-2-5.7z"/></svg>
+      </div>
+      <div class="icon-btn filled">
+        <svg class="icon filled-part" viewBox="0 0 24 24" style="width:18px;height:18px; stroke:none;"><path d="M12 3.3c-2.1 2.9-4.9 4.8-4.9 8.4a4.9 4.9 0 0 0 9.8 0c0-1.8-.9-2.9-1.9-3.8.3 1.4-.5 1.9-1 1.1-.6-1-1-2.6-2-5.7z"/></svg>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">05 — Components</div>
+    <h2 class="sec-title">Church cards & live state</h2>
+    <p class="sec-desc">Cards stay flat and quiet by default. Color only appears when there's something time-sensitive to flag — an upcoming Nigs tag, or a Gubae happening right now.</p>
+    <div class="card-grid">
+      <div class="church-card">
+        <div class="church-card-top">
+          <div>
+            <div class="church-name">St. Mary Church</div>
+            <div class="church-meta">Addis Ababa · Diocese of Addis Ababa</div>
+          </div>
+          <div class="distance-pill mono">1.8 km</div>
+        </div>
+        <div class="tag-row">
+          <div class="tag">Kidane Mihret</div>
+          <div class="tag nigs">Nigs · 16 Nehasé</div>
+        </div>
+      </div>
+      <div class="church-card">
+        <div class="church-card-top">
+          <div>
+            <div class="church-name">Kidane Mihret Church</div>
+            <div class="church-meta">Bahir Dar · Lake Tana Diocese</div>
+          </div>
+          <div class="distance-pill mono">4.2 km</div>
+        </div>
+        <div class="tag-row">
+          <div class="tag nigs">Nigs · Tomorrow</div>
+        </div>
+        <div class="live-banner"><div class="pulse-dot"></div> Currently happening — Annual Gubae</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">06 — Map Language</div>
+    <h2 class="sec-title">GPS dot, pins, and selection</h2>
+    <p class="sec-desc">A glowing teal dot marks the pilgrim. Default pins stay ink-neutral so the map isn't noisy; only a live event or a selected destination earns color.</p>
+    <div class="map-demo">
+      <div class="grid-lines"></div>
+      <div class="user-dot"></div>
+      <div class="pin" style="left:22%; top:28%;"></div>
+      <div class="pin live" style="left:64%; top:34%;"></div>
+      <div class="pin selected" style="left:72%; top:64%;"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">07 — Iconography</div>
+    <h2 class="sec-title">One custom stroke system, every icon</h2>
+    <p class="sec-desc">24px grid, 1.75px stroke, rounded joins — same geometry as the Space Grotesk letterforms so icons and type feel drawn by the same hand. Nothing borrowed from a generic icon font; every mark below is a hand-built SVG path tied to the brand.</p>
+    <div class="icon-grid">
+      <div class="icon-tile">
+        <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.3 8.7l-2.1 4.5-4.5 2.1 2.1-4.5z"/></svg>
+        <div class="icon-tile-label">Map</div>
+      </div>
+      <div class="icon-tile">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M7 4.2h10a.8.8 0 0 1 .8.8v14.3l-5.8-3.9-5.8 3.9V5a.8.8 0 0 1 .8-.8z"/></svg>
+        <div class="icon-tile-label">Bookmarks</div>
+      </div>
+      <div class="icon-tile">
+        <svg class="icon" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="14" rx="3.5"/><path d="M8 4v4M16 4v4M4 11h16"/><circle class="filled-part" cx="9" cy="15.3" r="1" stroke="none"/></svg>
+        <div class="icon-tile-label">Calendar</div>
+      </div>
+      <div class="icon-tile">
+        <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="9" r="3.3"/><path d="M5.3 20c1-3.6 4-5.4 6.7-5.4s5.7 1.8 6.7 5.4"/></svg>
+        <div class="icon-tile-label">Profile</div>
+      </div>
+      <div class="icon-tile">
+        <svg class="icon" viewBox="0 0 24 24"><circle cx="10.3" cy="10.3" r="6.3"/><path d="M19 19l-3.8-3.8"/></svg>
+        <div class="icon-tile-label">Search</div>
+      </div>
+      <div class="icon-tile">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M4 5.5h16l-6.2 7.3v5.2l-3.6 1.8v-7z"/></svg>
+        <div class="icon-tile-label">Filter</div>
+      </div>
+      <div class="icon-tile">
+        <svg class="icon" viewBox="0 0 24 24"><circle class="filled-part" cx="12" cy="12" r="2.2" stroke="none"/><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3"/><circle cx="12" cy="12" r="7.2"/></svg>
+        <div class="icon-tile-label">Recenter GPS</div>
+      </div>
+      <div class="icon-tile">
+        <svg class="icon" viewBox="0 0 24 24"><circle class="filled-part" cx="5.3" cy="19" r="1.5" stroke="none"/><path d="M5.3 19c0-5.3 4-4.7 6-8.3s1.7-6.4 1.7-6.4" stroke-dasharray="0.2 3"/><circle class="filled-part" cx="13" cy="4.3" r="1.5" stroke="none"/></svg>
+        <div class="icon-tile-label">Route</div>
+      </div>
+      <div class="icon-tile">
+        <svg class="icon" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="5.5"/><path d="M12 8.2v7.6M8.2 12h7.6"/></svg>
+        <div class="icon-tile-label">Add church</div>
+      </div>
+      <div class="icon-tile">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M12 3.3c-2.1 2.9-4.9 4.8-4.9 8.4a4.9 4.9 0 0 0 9.8 0c0-1.8-.9-2.9-1.9-3.8.3 1.4-.5 1.9-1 1.1-.6-1-1-2.6-2-5.7z"/></svg>
+        <div class="icon-tile-label">Favorite</div>
+      </div>
+      <div class="icon-tile">
+        <svg class="icon" viewBox="0 0 24 24"><circle class="filled-part" cx="12" cy="12" r="1.5" stroke="none"/><path d="M8.6 8.6a5 5 0 0 1 6.8 0" opacity=".85"/><path d="M6 6a9 9 0 0 1 12 0" opacity=".45"/></svg>
+        <div class="icon-tile-label">Live event</div>
+      </div>
+      <div class="icon-tile">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M15 5l-6.5 7L15 19"/></svg>
+        <div class="icon-tile-label">Back</div>
+      </div>
+      <div class="icon-tile">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M4.5 7h15M4.5 12h10.5M4.5 17h15"/></svg>
+        <div class="icon-tile-label">Menu</div>
+      </div>
+      <div class="icon-tile">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        <div class="icon-tile-label">Close</div>
+      </div>
+      <div class="icon-tile">
+        <svg class="icon" viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.9"/><circle cx="18" cy="6" r="1.9"/><circle cx="18" cy="18" r="1.9"/><path d="M7.7 11l8.6-4M7.7 13l8.6 4"/></svg>
+        <div class="icon-tile-label">Share</div>
+      </div>
+      <div class="icon-tile">
+        <svg class="icon" viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M9 17h6" /><circle class="filled-part" cx="12" cy="17.6" r=".4" stroke="none"/></svg>
+        <div class="icon-tile-label">Contact</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">08 — Applied: Search & Headers</div>
+    <h2 class="sec-title">Icons in context</h2>
+    <p class="sec-desc">The same marks doing real jobs — search entry, filter access, and a standard page header with back / title / share.</p>
+    <div style="display:flex; flex-direction:column; gap:16px; max-width:420px;">
+      <div class="searchbar">
+        <svg class="icon" viewBox="0 0 24 24"><circle cx="10.3" cy="10.3" r="6.3"/><path d="M19 19l-3.8-3.8"/></svg>
+        <input type="text" placeholder="Search church, Tabot, or Nigs…" />
+        <div class="icon-btn">
+          <svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M4 5.5h16l-6.2 7.3v5.2l-3.6 1.8v-7z"/></svg>
+        </div>
+      </div>
+      <div class="page-header">
+        <div class="header-side">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M15 5l-6.5 7L15 19"/></svg>
+        </div>
+        <div class="title">St. Mary Church</div>
+        <div class="header-side">
+          <svg class="icon" viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.9"/><circle cx="18" cy="6" r="1.9"/><circle cx="18" cy="18" r="1.9"/><path d="M7.7 11l8.6-4M7.7 13l8.6 4"/></svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="border-bottom:none;">
+    <div class="eyebrow">09 — Navigation</div>
+    <h2 class="sec-title">Four tabs, one active accent</h2>
+    <p class="sec-desc">Map, Bookmarks, Calendar, Profile. The active tab is the only place Ember appears in the nav — consistent, never decorative.</p>
+    <div class="navbar-demo">
+      <div class="nav-item active">
+        <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.3 8.7l-2.1 4.5-4.5 2.1 2.1-4.5z"/></svg>
+        Map
+      </div>
+      <div class="nav-item">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M7 4.2h10a.8.8 0 0 1 .8.8v14.3l-5.8-3.9-5.8 3.9V5a.8.8 0 0 1 .8-.8z"/></svg>
+        Bookmarks
+      </div>
+      <div class="nav-item">
+        <svg class="icon" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="14" rx="3.5"/><path d="M8 4v4M16 4v4M4 11h16"/></svg>
+        Calendar
+      </div>
+      <div class="nav-item">
+        <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="9" r="3.3"/><path d="M5.3 20c1-3.6 4-5.4 6.7-5.4s5.7 1.8 6.7 5.4"/></svg>
+        Profile
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>Mekanät — መካናት · Toggle Light/Dark above to preview both surfaces</footer>
+
+<script>
+  const body = document.body;
+  const btnLight = document.getElementById('btn-light');
+  const btnDark = document.getElementById('btn-dark');
+  btnLight.onclick = () => { body.setAttribute('data-theme','light'); btnLight.classList.add('active'); btnDark.classList.remove('active'); };
+  btnDark.onclick = () => { body.setAttribute('data-theme','dark'); btnDark.classList.add('active'); btnLight.classList.remove('active'); };
+</script>
+
+</body>
+</html>

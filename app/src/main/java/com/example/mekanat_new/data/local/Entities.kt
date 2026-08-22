@@ -9,17 +9,17 @@ import androidx.room.PrimaryKey
 data class ChurchEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
-    val nameAmharic: String?,
+    val nameAmharic: String? = null,
     val latitude: Double,
     val longitude: Double,
     val region: String,
     val diocese: String,
     val churchType: String,       // ROCK_HEWN, MONASTERY, CATHEDRAL, PARISH
-    val description: String?,
-    val history: String?,
-    val address: String?,
-    val contactPhone: String?,
-    val contactEmail: String?,
+    val description: String? = null,
+    val history: String? = null,
+    val address: String? = null,
+    val contactPhone: String? = null,
+    val contactEmail: String? = null,
     val isVerified: Boolean = true,   // false for community submissions pending review
     val submittedBy: String? = null,
     val createdAt: Long = System.currentTimeMillis()
@@ -42,7 +42,8 @@ data class TabotEntity(
     val nameEnglish: String,       // "Kidane Mihret"
     val nigsMonth: Int,            // Ethiopian month 1-13
     val nigsDay: Int,              // Ethiopian day 1-30
-    val description: String? = null
+    val description: String? = null,
+    val routingDescription: String? = null
 )
 
 @Entity(

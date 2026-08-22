@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,6 +26,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Directions
+import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.HistoryEdu
 import androidx.compose.material.icons.filled.Info
@@ -75,11 +77,21 @@ import com.example.mekanat_new.data.model.ChurchWithDistance
 import com.example.mekanat_new.data.util.EthiopianCalendar
 import com.example.mekanat_new.data.util.MekanatMedia
 import com.example.mekanat_new.ui.components.MekanatCrossIcon
+import com.example.mekanat_new.ui.components.MekanatDistancePill
+import com.example.mekanat_new.ui.components.MekanatIconBack
+import com.example.mekanat_new.ui.components.MekanatIconBookmarks
+import com.example.mekanat_new.ui.components.MekanatIconShare
 import com.example.mekanat_new.ui.components.MekanatInkLoader
+import com.example.mekanat_new.ui.components.MekanatLiveBanner
+import com.example.mekanat_new.ui.components.MekanatNigsTag
+import com.example.mekanat_new.ui.components.MekanatRouteButton
 import com.example.mekanat_new.ui.components.vibrateClick
+import com.example.mekanat_new.ui.theme.BrandEmber
 import com.example.mekanat_new.ui.theme.CanvasBlack
+import com.example.mekanat_new.ui.theme.MekanatDataTypography
 import com.example.mekanat_new.ui.theme.SignalRed
 import com.example.mekanat_new.ui.theme.SignalRedSubtle
+import com.example.mekanat_new.ui.theme.WayfindingTeal
 import com.example.mekanat_new.ui.viewmodel.MekanatViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -118,17 +130,16 @@ fun ChurchDetailScreen(
         }
 
         val shareMessage = buildString {
-            append("⛪ ")
             append(ch.name)
             ch.nameAmharic?.let { append(" | $it") }
             append("\n")
-            append("📍 Diocese: ${ch.diocese}, ${ch.region}\n")
-            append("🌐 GPS Coordinates: ${String.format("%.5f", ch.latitude)}, ${String.format("%.5f", ch.longitude)}\n\n")
-            append("🗺️ Google Maps: https://maps.google.com/?q=${ch.latitude},${ch.longitude}\n")
-            append("🧭 Gebeta Maps: https://maps.gebeta.app/?lat=${ch.latitude}&lng=${ch.longitude}\n\n")
-            append("📜 Holy Tabot(s): $tabotsText\n")
+            append("Diocese: ${ch.diocese}, ${ch.region}\n")
+            append("GPS Coordinates: ${String.format("%.5f", ch.latitude)}, ${String.format("%.5f", ch.longitude)}\n\n")
+            append("Google Maps: https://maps.google.com/?q=${ch.latitude},${ch.longitude}\n")
+            append("Gebeta Maps: https://maps.gebeta.app/?lat=${ch.latitude}&lng=${ch.longitude}\n\n")
+            append("Holy Tabot(s): $tabotsText\n")
             ch.description?.let {
-                append("\n📖 Sanctuary History:\n$it\n")
+                append("\nSanctuary History:\n$it\n")
             }
             append("\nShared via Mekanāt (መካናት) — Ethiopian Orthodox Pilgrimage & Sanctuaries")
         }
@@ -159,7 +170,7 @@ fun ChurchDetailScreen(
                         haptic.vibrateClick()
                         onBack()
                     }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        MekanatIconBack(tint = MaterialTheme.colorScheme.onSurface)
                     }
                 },
                 actions = {
@@ -168,11 +179,7 @@ fun ChurchDetailScreen(
                             onClick = { shareChurch(ch) },
                             modifier = Modifier.testTag("share_church_button")
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Share,
-                                contentDescription = "Share Sanctuary",
-                                tint = MaterialTheme.colorScheme.onSurface
-                            )
+                            MekanatIconShare(tint = MaterialTheme.colorScheme.onSurface)
                         }
 
                         IconButton(
@@ -182,10 +189,9 @@ fun ChurchDetailScreen(
                             },
                             modifier = Modifier.testTag("favorite_toggle_button")
                         ) {
-                            Icon(
-                                imageVector = if (isFavorite) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                                contentDescription = "Bookmark",
-                                tint = if (isFavorite) SignalRed else MaterialTheme.colorScheme.onSurface
+                            MekanatIconBookmarks(
+                                tint = if (isFavorite) BrandEmber else MaterialTheme.colorScheme.onSurface,
+                                filled = isFavorite
                             )
                         }
                     }
@@ -200,12 +206,13 @@ fun ChurchDetailScreen(
             church?.let { ch ->
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                     shadowElevation = 8.dp,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
                         modifier = Modifier
+                            .navigationBarsPadding()
                             .padding(horizontal = 16.dp, vertical = 14.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -213,9 +220,9 @@ fun ChurchDetailScreen(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "${String.format("%.1f", distKm)} km • ~$etaMinutes min driving",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = SignalRed
+                                style = MekanatDataTypography.instrumentationLarge.copy(
+                                    fontSize = 14.sp,
+                                    color = WayfindingTeal
                                 )
                             )
                             Text(
@@ -227,27 +234,15 @@ fun ChurchDetailScreen(
                             )
                         }
 
-                        Button(
+                        MekanatRouteButton(
+                            text = "▲ Start route",
                             onClick = {
-                                haptic.vibrateClick()
                                 val item = uiState.nearbyChurches.find { it.church.id == ch.id }
                                     ?: ChurchWithDistance(ch, distKm, activeGubae.isNotEmpty())
                                 onStartRoute(item)
                             },
-                            shape = RoundedCornerShape(24.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = SignalRed,
-                                contentColor = Color.White
-                            ),
-                            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
-                            modifier = Modifier
-                                .height(48.dp)
-                                .testTag("detail_route_button")
-                        ) {
-                            Icon(Icons.Default.Directions, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Start Route", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                        }
+                            modifier = Modifier.testTag("detail_route_button")
+                        )
                     }
                 }
             }
@@ -275,7 +270,7 @@ fun ChurchDetailScreen(
                 item {
                     Card(
                         shape = RoundedCornerShape(20.dp),
-                        elevation = CardDefaults.cardElevation(2.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -398,47 +393,25 @@ fun ChurchDetailScreen(
                 // Currently Happening (Live Gubae) Banner
                 if (activeGubae.isNotEmpty()) {
                     item {
-                        activeGubae.forEach { gubae ->
-                            Card(
-                                shape = RoundedCornerShape(18.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                                elevation = CardDefaults.cardElevation(2.dp),
-                                border = BorderStroke(1.5.dp, SignalRed),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Column(modifier = Modifier.padding(16.dp)) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.padding(bottom = 6.dp)
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            activeGubae.forEach { gubae ->
+                                MekanatLiveBanner(
+                                    text = "CURRENTLY HAPPENING • ${gubae.title.uppercase()}"
+                                )
+                                gubae.description?.let { desc ->
+                                    Card(
+                                        shape = RoundedCornerShape(14.dp),
+                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                                        modifier = Modifier.fillMaxWidth()
                                     ) {
-                                        Icon(
-                                            Icons.Default.FiberManualRecord,
-                                            contentDescription = "Live",
-                                            tint = SignalRed,
-                                            modifier = Modifier.size(10.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text(
-                                            text = "CURRENTLY HAPPENING • LIVE GUBAE",
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                color = SignalRed,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                        )
-                                    }
-
-                                    Text(
-                                        text = gubae.title,
-                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
-                                    )
-                                    gubae.description?.let { desc ->
-                                        Spacer(modifier = Modifier.height(4.dp))
                                         Text(
                                             text = desc,
                                             style = MaterialTheme.typography.bodySmall.copy(
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 lineHeight = 18.sp
-                                            )
+                                            ),
+                                            modifier = Modifier.padding(14.dp)
                                         )
                                     }
                                 }
@@ -452,8 +425,8 @@ fun ChurchDetailScreen(
                     Card(
                         shape = RoundedCornerShape(18.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(2.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
@@ -499,7 +472,7 @@ fun ChurchDetailScreen(
                                                 ) {
                                                     CircularProgressIndicator(
                                                         modifier = Modifier.size(18.dp),
-                                                        color = SignalRed,
+                                                        color = BrandEmber,
                                                         strokeWidth = 2.dp
                                                     )
                                                 }
@@ -529,21 +502,48 @@ fun ChurchDetailScreen(
                                         Text(
                                             text = "Annual Nigs: $ethMonthAmharic ${tabot.nigsDay} ($ethMonthName ${tabot.nigsDay})",
                                             style = MaterialTheme.typography.bodySmall.copy(
-                                                color = SignalRed,
-                                                fontWeight = FontWeight.Medium,
+                                                color = BrandEmber,
+                                                fontWeight = FontWeight.SemiBold,
                                                 fontSize = 11.5.sp
                                             )
                                         )
                                         tabot.description?.let { desc ->
-                                            Text(
-                                                text = desc,
-                                                style = MaterialTheme.typography.bodySmall.copy(
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                    fontSize = 11.sp
-                                                ),
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
+                                            if (desc.isNotBlank()) {
+                                                Spacer(modifier = Modifier.height(2.dp))
+                                                Text(
+                                                    text = desc,
+                                                    style = MaterialTheme.typography.bodySmall.copy(
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        fontSize = 11.sp,
+                                                        lineHeight = 15.sp
+                                                    ),
+                                                    maxLines = 2,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+                                        }
+                                        tabot.routingDescription?.let { routing ->
+                                            if (routing.isNotBlank()) {
+                                                Spacer(modifier = Modifier.height(3.dp))
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Icon(
+                                                        Icons.Default.DirectionsWalk,
+                                                        contentDescription = null,
+                                                        tint = WayfindingTeal,
+                                                        modifier = Modifier.size(13.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(3.dp))
+                                                    Text(
+                                                        text = routing,
+                                                        style = MaterialTheme.typography.labelSmall.copy(
+                                                            color = WayfindingTeal,
+                                                            fontSize = 10.5.sp
+                                                        ),
+                                                        maxLines = 2,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+                                                }
+                                            }
                                         }
                                     }
 
@@ -551,11 +551,10 @@ fun ChurchDetailScreen(
                                         onClick = { viewModel.onToggleTabotBookmark(tabot.id, isNigsSaved) },
                                         modifier = Modifier.size(36.dp)
                                     ) {
-                                        Icon(
-                                            imageVector = if (isNigsSaved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                                            contentDescription = "Save Nigs",
-                                            tint = if (isNigsSaved) SignalRed else MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.size(20.dp)
+                                        MekanatIconBookmarks(
+                                            tint = if (isNigsSaved) BrandEmber else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            filled = isNigsSaved,
+                                            size = 20.dp
                                         )
                                     }
                                 }
@@ -574,8 +573,7 @@ fun ChurchDetailScreen(
                         Card(
                             shape = RoundedCornerShape(18.dp),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            elevation = CardDefaults.cardElevation(2.dp),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
@@ -614,8 +612,7 @@ fun ChurchDetailScreen(
                         Card(
                             shape = RoundedCornerShape(18.dp),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            elevation = CardDefaults.cardElevation(2.dp),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
@@ -661,8 +658,7 @@ fun ChurchDetailScreen(
                     Card(
                         shape = RoundedCornerShape(18.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(2.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {

@@ -4,9 +4,9 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -16,7 +16,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.example.mekanat_new.ui.components.MekanatBottomBar
 import com.example.mekanat_new.ui.viewmodel.MekanatViewModel
 
@@ -75,21 +77,11 @@ fun MainScreen(
             )
         }
         MekanatDestination.MAIN -> {
-            Scaffold(
-                snackbarHost = { SnackbarHost(snackbarHostState) },
-                bottomBar = {
-                    MekanatBottomBar(
-                        currentTab = uiState.currentTab,
-                        onTabSelected = { viewModel.onSelectTab(it) }
-                    )
-                }
-            ) { paddingValues ->
+            Box(modifier = Modifier.fillMaxSize()) {
                 AnimatedContent(
                     targetState = uiState.currentTab,
                     transitionSpec = { fadeIn() togetherWith fadeOut() },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
+                    modifier = Modifier.fillMaxSize(),
                     label = "tabTransition"
                 ) { tab ->
                     when (tab) {
@@ -97,12 +89,19 @@ fun MainScreen(
                             uiState = uiState,
                             onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
                             onCommitSearch = { query, count -> viewModel.onCommitSearch(query, count) },
+                            onTriggerSearchWithAnimation = { viewModel.onTriggerSearchWithAnimation(it) },
+                            onDismissSearchLoader = { viewModel.onDismissSearchLoader() },
                             onDeleteSearchHistory = { viewModel.onDeleteSearchHistory(it) },
                             onClearAllSearchHistory = { viewModel.onClearAllSearchHistory() },
                             onFilterChipSelected = { viewModel.onFilterChipSelected(it) },
+                            onSetSortOption = { viewModel.onSetSortOption(it) },
                             onSelectChurch = { viewModel.onSelectChurch(it) },
                             onStartRoute = { viewModel.onStartRoute(it) },
                             onChangeTravelMode = { viewModel.onChangeTravelMode(it) },
+                            onReverseRoute = { viewModel.onReverseRoute() },
+                            onToggleLiveNav = { viewModel.onToggleLiveNav() },
+                            onNextNavStep = { viewModel.onNextNavStep() },
+                            onPrevNavStep = { viewModel.onPrevNavStep() },
                             onClearRoute = { viewModel.onClearRoute() },
                             onToggleMapView = { viewModel.onToggleMapView() },
                             onOpenChurchDetail = { id ->
@@ -133,14 +132,36 @@ fun MainScreen(
                                 currentDestination = MekanatDestination.DETAIL
                             },
                             onStartRoute = { viewModel.onStartRoute(it) },
-                            onToggleTabotBookmark = { id, isSaved -> viewModel.onToggleTabotBookmark(id, isSaved) }
+                            onToggleTabotBookmark = { id, isSaved -> viewModel.onToggleTabotBookmark(id, isSaved) },
+                            onAddNigsFeast = { churchId, nameAm, nameEn, month, day, detail, routing ->
+                                viewModel.onAddNigsFeast(churchId, nameAm, nameEn, month, day, detail, routing)
+                            },
+                            onQuickCreateChurchAndAddNigs = { churchName, churchAm, diocese, region, type, lat, lng, nameAm, nameEn, month, day, detail, routing ->
+                                viewModel.onQuickCreateChurchAndAddNigs(churchName, churchAm, diocese, region, type, lat, lng, nameAm, nameEn, month, day, detail, routing)
+                            }
                         )
                         3 -> ProfileScreen(
                             uiState = uiState,
-                            onOpenAddChurch = { currentDestination = MekanatDestination.ADD_CHURCH }
+                            onOpenAddChurch = { currentDestination = MekanatDestination.ADD_CHURCH },
+                            onSetThemeMode = { viewModel.onSetThemeMode(it) }
                         )
                     }
                 }
+
+                // Floating Bottom Navigation Bar directly over content
+                MekanatBottomBar(
+                    currentTab = uiState.currentTab,
+                    onTabSelected = { viewModel.onSelectTab(it) },
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                )
+
+                // Snackbar Host above bottom bar
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 84.dp)
+                )
             }
         }
     }

@@ -2,7 +2,6 @@ package com.example.mekanat_new.ui.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,21 +14,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkRemove
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Church
-import androidx.compose.material.icons.filled.Directions
-import androidx.compose.material.icons.filled.FiberManualRecord
-import androidx.compose.material.icons.filled.NearMe
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -57,9 +49,19 @@ import androidx.compose.ui.unit.sp
 import com.example.mekanat_new.data.model.ChurchWithDistance
 import com.example.mekanat_new.data.model.UpcomingNigs
 import com.example.mekanat_new.data.util.EthiopianCalendar
+import com.example.mekanat_new.ui.components.MekanatCrossIcon
+import com.example.mekanat_new.ui.components.MekanatDistancePill
+import com.example.mekanat_new.ui.components.MekanatIconBookmarks
 import com.example.mekanat_new.ui.components.MekanatInkLoader
+import com.example.mekanat_new.ui.components.MekanatLiveBanner
+import com.example.mekanat_new.ui.components.MekanatNigsTag
+import com.example.mekanat_new.ui.components.MekanatRouteButton
+import com.example.mekanat_new.ui.theme.BrandEmber
+import com.example.mekanat_new.ui.theme.CanvasBlack
+import com.example.mekanat_new.ui.theme.CrimsonPulse
+import com.example.mekanat_new.ui.theme.MekanatDataTypography
 import com.example.mekanat_new.ui.theme.SignalRed
-import com.example.mekanat_new.ui.theme.SignalRedSubtle
+import com.example.mekanat_new.ui.theme.WayfindingTeal
 import com.example.mekanat_new.ui.viewmodel.MekanatUiState
 
 @Composable
@@ -82,19 +84,23 @@ fun BookmarksScreen(
         // Top Header
         Surface(
             color = MaterialTheme.colorScheme.surface,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp)) {
+            Column(
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(top = 12.dp, start = 16.dp, end = 16.dp)
+            ) {
                 Text(
                     text = "Bookmarks & Pilgrimage",
-                    style = MaterialTheme.typography.titleLarge.copy(
+                    style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 )
                 Text(
-                    text = "Your saved EOTC sanctuaries and patronal feast reminders",
+                    text = "Saved EOTC sanctuaries and patronal feast reminders",
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -122,7 +128,8 @@ fun BookmarksScreen(
                                 Text(
                                     text = title,
                                     style = MaterialTheme.typography.bodyMedium.copy(
-                                        fontWeight = if (selectedSubtab == index) FontWeight.Bold else FontWeight.Normal
+                                        fontWeight = if (selectedSubtab == index) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (selectedSubtab == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 )
                             }
@@ -138,12 +145,14 @@ fun BookmarksScreen(
             if (uiState.favoriteChurches.isEmpty()) {
                 EmptyBookmarksState(
                     title = "No Saved Churches",
-                    subtitle = "Tap the bookmark icon on any church on the map or detail screen to save it for your pilgrimage."
+                    subtitle = "Tap the bookmark ribbon on any church on the map or detail screen to save it for your pilgrimage."
                 )
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .navigationBarsPadding(),
+                    contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 86.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(uiState.favoriteChurches, key = { it.church.id }) { item ->
@@ -165,8 +174,10 @@ fun BookmarksScreen(
                 )
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .navigationBarsPadding(),
+                    contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 86.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(uiState.savedNigs, key = { it.tabot.id }) { nigs ->
@@ -195,16 +206,16 @@ fun SavedChurchItemCard(
     onRemove: () -> Unit
 ) {
     Card(
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(0.dp),
+        elevation = CardDefaults.cardElevation(2.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onSelect() }
             .testTag("saved_church_${item.church.id}")
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -212,30 +223,10 @@ fun SavedChurchItemCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     if (item.hasActiveGubae) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .padding(bottom = 4.dp)
-                                .background(SignalRedSubtle, RoundedCornerShape(10.dp))
-                                .border(1.dp, SignalRed.copy(alpha = 0.3f), RoundedCornerShape(10.dp))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.FiberManualRecord,
-                                contentDescription = "Live",
-                                tint = SignalRed,
-                                modifier = Modifier.size(8.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "LIVE GUBAE ACTIVE",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = SignalRed,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 9.sp
-                                )
-                            )
-                        }
+                        MekanatLiveBanner(
+                            text = "LIVE GUBAE ACTIVE",
+                            modifier = Modifier.padding(bottom = 6.dp)
+                        )
                     }
 
                     Text(
@@ -261,8 +252,8 @@ fun SavedChurchItemCard(
                     Icon(
                         Icons.Default.BookmarkRemove,
                         contentDescription = "Remove bookmark",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp)
+                        tint = BrandEmber,
+                        modifier = Modifier.size(22.dp)
                     )
                 }
             }
@@ -273,72 +264,29 @@ fun SavedChurchItemCard(
                 text = "${item.church.region} • ${item.church.diocese}",
                 style = MaterialTheme.typography.bodySmall.copy(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 11.5.sp
+                    fontSize = 12.sp
                 )
             )
 
             item.nextNigsFormatted?.let { nigs ->
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Next Nigs: $nigs",
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                )
+                Spacer(modifier = Modifier.height(6.dp))
+                MekanatNigsTag(text = "Next Nigs: $nigs")
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.NearMe,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(12.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "${String.format("%.1f", item.distanceKm)} km",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 11.sp
-                            )
-                        )
-                    }
-                }
+                MekanatDistancePill(distanceText = "${String.format("%.1f", item.distanceKm)} km")
 
-                Button(
+                MekanatRouteButton(
+                    text = "▲ Route",
                     onClick = onRoute,
-                    shape = RoundedCornerShape(20.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = SignalRed,
-                        contentColor = Color.White
-                    ),
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp),
                     modifier = Modifier.height(36.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Directions,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Route", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                }
+                )
             }
         }
     }
@@ -355,16 +303,16 @@ fun SavedNigsItemCard(
     val ethMonthAmharic = EthiopianCalendar.monthNamesAmharic.getOrElse(nigs.tabot.nigsMonth - 1) { "" }
 
     Card(
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(0.dp),
+        elevation = CardDefaults.cardElevation(2.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onSelectChurch() }
             .testTag("saved_nigs_${nigs.tabot.id}")
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -374,8 +322,8 @@ fun SavedNigsItemCard(
                     // Countdown Pill
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        color = if (nigs.daysUntil == 0) SignalRed else MaterialTheme.colorScheme.surfaceVariant,
-                        border = BorderStroke(1.dp, if (nigs.daysUntil == 0) SignalRed else MaterialTheme.colorScheme.outline),
+                        color = if (nigs.daysUntil == 0) BrandEmber else MaterialTheme.colorScheme.surfaceVariant,
+                        border = BorderStroke(1.dp, if (nigs.daysUntil == 0) BrandEmber else MaterialTheme.colorScheme.outline),
                         modifier = Modifier.padding(bottom = 6.dp)
                     ) {
                         Text(
@@ -412,8 +360,8 @@ fun SavedNigsItemCard(
                     Icon(
                         Icons.Default.BookmarkRemove,
                         contentDescription = "Remove Nigs",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp)
+                        tint = BrandEmber,
+                        modifier = Modifier.size(22.dp)
                     )
                 }
             }
@@ -428,7 +376,7 @@ fun SavedNigsItemCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -459,8 +407,8 @@ fun SavedNigsItemCard(
                         )
                         Text(
                             text = "${nigs.nextDate.month.name.take(3)} ${nigs.nextDate.dayOfMonth}, ${nigs.nextDate.year}",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontWeight = FontWeight.Medium
+                            style = MekanatDataTypography.distancePill.copy(
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         )
                     }
@@ -473,24 +421,11 @@ fun SavedNigsItemCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                Button(
+                MekanatRouteButton(
+                    text = "▲ Route to Church",
                     onClick = onRoute,
-                    shape = RoundedCornerShape(20.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = SignalRed,
-                        contentColor = Color.White
-                    ),
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp),
                     modifier = Modifier.height(36.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Directions,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Route to Church", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                }
+                )
             }
         }
     }
@@ -506,7 +441,7 @@ fun EmptyBookmarksState(title: String, subtitle: String) {
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(32.dp)
         ) {
-            MekanatInkLoader(size = 72.dp)
+            MekanatCrossIcon(size = 56.dp, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = title,

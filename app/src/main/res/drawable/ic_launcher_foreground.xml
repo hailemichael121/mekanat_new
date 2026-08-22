@@ -3,7 +3,8 @@
     <item
         android:width="66dp"
         android:height="66dp"
-        android:drawable="@drawable/ic_mekanat_logo_notext"
+        android:drawable="@drawable/app_icon_foreground"
         android:gravity="center" />
 </layer-list>
+
 

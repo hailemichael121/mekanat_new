@@ -15,6 +15,7 @@ import com.example.mekanat_new.data.model.SearchResult
 import com.example.mekanat_new.data.model.UpcomingNigs
 import com.example.mekanat_new.data.repository.ChurchRepository
 import com.example.mekanat_new.data.util.EthiopianCalendar
+import com.example.mekanat_new.ui.theme.ThemeMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -27,12 +28,26 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
+enum class ChurchSortOption(val label: String, val shortLabel: String) {
+    DISTANCE_NEAREST("Nearest First", "Distance ↗"),
+    DISTANCE_FURTHEST("Furthest First", "Distance ↘"),
+    NAME_AZ("Name (A–Z)", "A–Z"),
+    NAME_ZA("Name (Z–A)", "Z–A"),
+    HISTORICAL("Historical Age", "Age")
+}
+
 data class MekanatUiState(
     val userLat: Double = 9.0306,
     val userLng: Double = 38.7619,
     val currentTab: Int = 0, // 0=Map, 1=Bookmarks, 2=Calendar, 3=Profile
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val searchQuery: String = "",
     val activeFilterChip: String = "All",
+    val sortOption: ChurchSortOption = ChurchSortOption.DISTANCE_NEAREST,
+    val isSearchingLoading: Boolean = false,
+    val isRouteReversed: Boolean = false,
+    val isLiveNavigating: Boolean = false,
+    val liveNavStepIndex: Int = 0,
     val nearbyChurches: List<ChurchWithDistance> = emptyList(),
     val filteredChurches: List<ChurchWithDistance> = emptyList(),
     val searchResults: List<SearchResult> = emptyList(),
@@ -61,9 +76,15 @@ class MekanatViewModel(
 
     private val _userLat = MutableStateFlow(9.0306) // Default Addis Ababa
     private val _userLng = MutableStateFlow(38.7619)
+    private val _themeMode = MutableStateFlow(ThemeMode.SYSTEM)
     private val _currentTab = MutableStateFlow(0)
     private val _searchQuery = MutableStateFlow("")
     private val _activeFilterChip = MutableStateFlow("All")
+    private val _sortOption = MutableStateFlow(ChurchSortOption.DISTANCE_NEAREST)
+    private val _isSearchingLoading = MutableStateFlow(false)
+    private val _isRouteReversed = MutableStateFlow(false)
+    private val _isLiveNavigating = MutableStateFlow(false)
+    private val _liveNavStepIndex = MutableStateFlow(0)
     private val _selectedChurch = MutableStateFlow<ChurchWithDistance?>(null)
     private val _routeToChurch = MutableStateFlow<ChurchWithDistance?>(null)
     private val _activeRouteResult = MutableStateFlow<GebetaRouteResult?>(null)
@@ -79,43 +100,58 @@ class MekanatViewModel(
         combine(
             _searchQuery,
             _activeFilterChip,
+            _sortOption,
             _selectedChurch,
-            _routeToChurch,
-            _activeRouteResult
-        ) { query, filter, selected, route, routeResult ->
-            SearchRouteTuple(query, filter, selected, route, routeResult)
+            _routeToChurch
+        ) { query, filter, sort, selected, route ->
+            SearchRouteTuple(query, filter, sort, selected, route)
         },
         combine(
             repository.nearby(_userLat.value, _userLng.value),
             _selectedTravelMode,
             _isCalculatingRoute,
-            _isRouteNavigationOpen
-        ) { nearby, mode, isCalculating, isNavOpen ->
-            RouteModeTuple(nearby, mode, isCalculating, isNavOpen)
+            _isRouteNavigationOpen,
+            _activeRouteResult
+        ) { nearby, mode, isCalculating, isNavOpen, routeResult ->
+            RouteModeTuple(nearby, mode, isCalculating, isNavOpen, routeResult)
         },
         combine(
             _currentTab,
             _isMapView,
+            _themeMode,
             repository.getFavoriteChurches(_userLat.value, _userLng.value),
-            repository.getSavedNigs(),
-            repository.getUpcomingNigs()
-        ) { tab, isMapView, favorites, savedNigs, upcomingNigs ->
-            ContentTuple(tab, isMapView, favorites, savedNigs, upcomingNigs)
+            repository.getSavedNigs()
+        ) { tab, isMapView, themeMode, favorites, savedNigs ->
+            ContentTuple(tab, isMapView, themeMode, favorites, savedNigs)
         },
         combine(
             repository.getPendingSubmissions(),
             repository.getRecentSearches(),
+            repository.getUpcomingNigs(),
             _selectedCalendarDate,
-            _calendarMonth,
+            _calendarMonth
+        ) { submissions, recentSearches, upcomingNigs, calDate, calMonth ->
+            AuxTuple(submissions, recentSearches, upcomingNigs, calDate, calMonth)
+        },
+        combine(
+            _isSearchingLoading,
+            _isRouteReversed,
+            _isLiveNavigating,
+            _liveNavStepIndex,
             _snackbarMessage
-        ) { submissions, recentSearches, calDate, calMonth, snackbar ->
-            AuxTuple(submissions, recentSearches, calDate, calMonth, snackbar)
+        ) { isSearching, isReversed, isLiveNav, stepIndex, snackbar ->
+            LiveNavTuple(isSearching, isReversed, isLiveNav, stepIndex, snackbar)
         }
-    ) { searchRoute, routeMode, content, aux ->
-        val filtered = filterChurches(routeMode.nearby, searchRoute.query, searchRoute.filter)
-        val bucketed = bucketNigs(content.upcomingNigs)
+    ) { searchRoute, routeMode, content, aux, liveNav ->
+        val filtered = filterAndSortChurches(
+            list = routeMode.nearby,
+            query = searchRoute.query,
+            filter = searchRoute.filter,
+            sortOption = searchRoute.sort
+        )
+        val bucketed = bucketNigs(aux.upcomingNigs)
 
-        val routeDist = searchRoute.routeResult?.totalDistanceKm ?: searchRoute.route?.let {
+        val routeDist = routeMode.routeResult?.totalDistanceKm ?: searchRoute.route?.let {
             repository.calculateDistanceKm(_userLat.value, _userLng.value, it.church.latitude, it.church.longitude)
         }
 
@@ -123,14 +159,20 @@ class MekanatViewModel(
             userLat = _userLat.value,
             userLng = _userLng.value,
             currentTab = content.tab,
+            themeMode = content.themeMode,
             searchQuery = searchRoute.query,
             activeFilterChip = searchRoute.filter,
+            sortOption = searchRoute.sort,
+            isSearchingLoading = liveNav.isSearchingLoading,
+            isRouteReversed = liveNav.isRouteReversed,
+            isLiveNavigating = liveNav.isLiveNavigating,
+            liveNavStepIndex = liveNav.liveNavStepIndex,
             nearbyChurches = routeMode.nearby,
             filteredChurches = filtered,
             recentSearches = aux.recentSearches,
             selectedChurch = searchRoute.selected,
             routeToChurch = searchRoute.route,
-            activeRouteResult = searchRoute.routeResult,
+            activeRouteResult = routeMode.routeResult,
             selectedTravelMode = routeMode.mode,
             isCalculatingRoute = routeMode.isCalculating,
             routeDistanceKm = routeDist,
@@ -138,12 +180,12 @@ class MekanatViewModel(
             isRouteNavigationOpen = routeMode.isNavOpen,
             favoriteChurches = content.favorites,
             savedNigs = content.savedNigs,
-            allUpcomingNigs = content.upcomingNigs,
+            allUpcomingNigs = aux.upcomingNigs,
             bucketedNigs = bucketed,
             selectedCalendarDate = aux.calDate,
             calendarMonth = aux.calMonth,
             mySubmissions = aux.submissions,
-            snackbarMessage = aux.snackbar
+            snackbarMessage = liveNav.snackbar
         )
     }.stateIn(
         scope = viewModelScope,
@@ -151,12 +193,13 @@ class MekanatViewModel(
         initialValue = MekanatUiState()
     )
 
-    private fun filterChurches(
+    private fun filterAndSortChurches(
         list: List<ChurchWithDistance>,
         query: String,
-        filter: String
+        filter: String,
+        sortOption: ChurchSortOption
     ): List<ChurchWithDistance> {
-        return list.filter { item ->
+        val filtered = list.filter { item ->
             val matchesQuery = query.isBlank() ||
                     item.church.name.contains(query, ignoreCase = true) ||
                     (item.church.nameAmharic?.contains(query, ignoreCase = true) == true) ||
@@ -167,7 +210,7 @@ class MekanatViewModel(
 
             val matchesFilter = when (filter) {
                 "All" -> true
-                "Live Gubae 🔴" -> item.hasActiveGubae
+                "Live Gubae", "Live Gubae 🔴" -> item.hasActiveGubae
                 "Nearby (<50km)" -> item.distanceKm <= 50.0
                 "Monasteries" -> item.church.churchType == "MONASTERY"
                 "Cathedrals" -> item.church.churchType == "CATHEDRAL"
@@ -177,6 +220,14 @@ class MekanatViewModel(
             }
 
             matchesQuery && matchesFilter
+        }
+
+        return when (sortOption) {
+            ChurchSortOption.DISTANCE_NEAREST -> filtered.sortedBy { it.distanceKm }
+            ChurchSortOption.DISTANCE_FURTHEST -> filtered.sortedByDescending { it.distanceKm }
+            ChurchSortOption.NAME_AZ -> filtered.sortedBy { it.church.name }
+            ChurchSortOption.NAME_ZA -> filtered.sortedByDescending { it.church.name }
+            ChurchSortOption.HISTORICAL -> filtered.sortedBy { it.church.id }
         }
     }
 
@@ -381,6 +432,98 @@ class MekanatViewModel(
         }
     }
 
+    fun onAddNigsFeast(
+        churchId: Long,
+        nameAmharic: String,
+        nameEnglish: String,
+        nigsMonth: Int,
+        nigsDay: Int,
+        detail: String?,
+        routingDescription: String?
+    ) {
+        viewModelScope.launch {
+            val combinedDesc = buildString {
+                if (!detail.isNullOrBlank()) {
+                    append(detail.trim())
+                }
+                if (!routingDescription.isNullOrBlank()) {
+                    if (isNotEmpty()) append("\n\nPilgrimage & Route Directions:\n")
+                    else append("Pilgrimage & Route Directions:\n")
+                    append(routingDescription.trim())
+                }
+            }.ifBlank { null }
+
+            repository.addTabot(
+                TabotEntity(
+                    churchId = churchId,
+                    name = nameAmharic.ifBlank { nameEnglish },
+                    nameEnglish = nameEnglish.ifBlank { nameAmharic },
+                    nigsMonth = nigsMonth,
+                    nigsDay = nigsDay,
+                    description = detail?.trim()?.ifBlank { null } ?: combinedDesc,
+                    routingDescription = routingDescription?.trim()?.ifBlank { null }
+                )
+            )
+            showSnackbar("Nigs Feast celebration '$nameEnglish' added successfully!")
+        }
+    }
+
+    fun onQuickCreateChurchAndAddNigs(
+        churchName: String,
+        churchAmharic: String?,
+        diocese: String,
+        region: String,
+        churchType: String,
+        latitude: Double,
+        longitude: Double,
+        tabotNameAmharic: String,
+        tabotNameEnglish: String,
+        nigsMonth: Int,
+        nigsDay: Int,
+        detail: String?,
+        routingDescription: String?
+    ) {
+        viewModelScope.launch {
+            val church = ChurchEntity(
+                name = churchName.trim(),
+                nameAmharic = churchAmharic?.trim()?.ifBlank { null },
+                diocese = diocese.trim().ifBlank { "Orthodox Diocese" },
+                region = region.trim().ifBlank { "Ethiopia" },
+                churchType = churchType,
+                latitude = latitude,
+                longitude = longitude,
+                description = detail,
+                isVerified = true,
+                submittedBy = "Pilgrim Community"
+            )
+            val newChurchId = repository.submitChurch(church)
+
+            val combinedDesc = buildString {
+                if (!detail.isNullOrBlank()) {
+                    append(detail.trim())
+                }
+                if (!routingDescription.isNullOrBlank()) {
+                    if (isNotEmpty()) append("\n\nPilgrimage & Route Directions:\n")
+                    else append("Pilgrimage & Route Directions:\n")
+                    append(routingDescription.trim())
+                }
+            }.ifBlank { null }
+
+            repository.addTabot(
+                TabotEntity(
+                    churchId = newChurchId,
+                    name = tabotNameAmharic.ifBlank { tabotNameEnglish },
+                    nameEnglish = tabotNameEnglish.ifBlank { tabotNameAmharic },
+                    nigsMonth = nigsMonth,
+                    nigsDay = nigsDay,
+                    description = detail?.trim()?.ifBlank { null } ?: combinedDesc,
+                    routingDescription = routingDescription?.trim()?.ifBlank { null }
+                )
+            )
+            showSnackbar("Sanctuary '$churchName' & Nigs Feast created successfully!")
+        }
+    }
+
     fun onAddGubaeEvent(churchId: Long, title: String, description: String?, startEpoch: Long, endEpoch: Long) {
         viewModelScope.launch {
             repository.addGubaeEvent(churchId, title, description, startEpoch, endEpoch)
@@ -393,8 +536,103 @@ class MekanatViewModel(
         _userLng.value = lng
     }
 
+    fun onSetSortOption(option: ChurchSortOption) {
+        _sortOption.value = option
+    }
+
+    fun onTriggerSearchWithAnimation(query: String) {
+        _searchQuery.value = query
+        _isSearchingLoading.value = true
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(1100)
+            if (query.isNotBlank()) {
+                repository.recordSearch(query, 0)
+            }
+            _isSearchingLoading.value = false
+        }
+    }
+
+    fun onDismissSearchLoader() {
+        _isSearchingLoading.value = false
+    }
+
+    fun onReverseRoute() {
+        val currentDest = _routeToChurch.value ?: return
+        val newReversed = !_isRouteReversed.value
+        _isRouteReversed.value = newReversed
+
+        viewModelScope.launch {
+            _isCalculatingRoute.value = true
+            try {
+                val originLat = if (newReversed) currentDest.church.latitude else _userLat.value
+                val originLng = if (newReversed) currentDest.church.longitude else _userLng.value
+                val destLat = if (newReversed) _userLat.value else currentDest.church.latitude
+                val destLng = if (newReversed) _userLng.value else currentDest.church.longitude
+                val destName = if (newReversed) "Current Location" else currentDest.church.name
+
+                val result = GebetaMapService.fetchOrCalculateRoute(
+                    originLat = originLat,
+                    originLng = originLng,
+                    destLat = destLat,
+                    destLng = destLng,
+                    destName = destName,
+                    diocese = currentDest.church.diocese,
+                    mode = _selectedTravelMode.value
+                )
+                _activeRouteResult.value = result
+                showSnackbar(if (newReversed) "Route reversed: from ${currentDest.church.name} to My Location" else "Route: from My Location to ${currentDest.church.name}")
+            } catch (e: Exception) {
+                val fallback = GebetaMapService.calculateGebetaRoute(
+                    originLat = if (newReversed) currentDest.church.latitude else _userLat.value,
+                    originLng = if (newReversed) currentDest.church.longitude else _userLng.value,
+                    destLat = if (newReversed) _userLat.value else currentDest.church.latitude,
+                    destLng = if (newReversed) _userLng.value else currentDest.church.longitude,
+                    destName = if (newReversed) "Current Location" else currentDest.church.name,
+                    diocese = currentDest.church.diocese,
+                    mode = _selectedTravelMode.value
+                )
+                _activeRouteResult.value = fallback
+            } finally {
+                _isCalculatingRoute.value = false
+            }
+        }
+    }
+
+    fun onToggleLiveNav() {
+        _isLiveNavigating.value = !_isLiveNavigating.value
+        if (_isLiveNavigating.value) {
+            _liveNavStepIndex.value = 0
+            showSnackbar("Live navigation started. Follow turn-by-turn guidance.")
+        }
+    }
+
+    fun onNextNavStep() {
+        val maxSteps = (_activeRouteResult.value?.steps?.size ?: 1) - 1
+        if (_liveNavStepIndex.value < maxSteps) {
+            _liveNavStepIndex.value += 1
+        }
+    }
+
+    fun onPrevNavStep() {
+        if (_liveNavStepIndex.value > 0) {
+            _liveNavStepIndex.value -= 1
+        }
+    }
+
     fun showSnackbar(message: String) {
         _snackbarMessage.value = message
+    }
+
+    fun onSetThemeMode(mode: ThemeMode) {
+        _themeMode.value = mode
+    }
+
+    fun onToggleThemeMode() {
+        _themeMode.value = when (_themeMode.value) {
+            ThemeMode.DARK -> ThemeMode.LIGHT
+            ThemeMode.LIGHT -> ThemeMode.SYSTEM
+            ThemeMode.SYSTEM -> ThemeMode.DARK
+        }
     }
 
     fun clearSnackbar() {
@@ -414,31 +652,40 @@ class MekanatViewModel(
 private data class SearchRouteTuple(
     val query: String,
     val filter: String,
+    val sort: ChurchSortOption,
     val selected: ChurchWithDistance?,
-    val route: ChurchWithDistance?,
-    val routeResult: GebetaRouteResult?
+    val route: ChurchWithDistance?
 )
 
 private data class RouteModeTuple(
     val nearby: List<ChurchWithDistance>,
     val mode: GebetaTravelMode,
     val isCalculating: Boolean,
-    val isNavOpen: Boolean
+    val isNavOpen: Boolean,
+    val routeResult: GebetaRouteResult?
 )
 
 private data class ContentTuple(
     val tab: Int,
     val isMapView: Boolean,
+    val themeMode: ThemeMode,
     val favorites: List<ChurchWithDistance>,
-    val savedNigs: List<UpcomingNigs>,
-    val upcomingNigs: List<UpcomingNigs>
+    val savedNigs: List<UpcomingNigs>
 )
 
 private data class AuxTuple(
     val submissions: List<ChurchEntity>,
     val recentSearches: List<SearchHistoryEntity>,
+    val upcomingNigs: List<UpcomingNigs>,
     val calDate: LocalDate,
-    val calMonth: LocalDate,
+    val calMonth: LocalDate
+)
+
+private data class LiveNavTuple(
+    val isSearchingLoading: Boolean,
+    val isRouteReversed: Boolean,
+    val isLiveNavigating: Boolean,
+    val liveNavStepIndex: Int,
     val snackbar: String?
 )
 

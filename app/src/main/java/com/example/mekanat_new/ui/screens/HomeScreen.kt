@@ -9,9 +9,11 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -28,44 +30,60 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AltRoute
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Directions
-import androidx.compose.material.icons.filled.DirectionsBus
-import androidx.compose.material.icons.filled.DirectionsCar
-import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.NavigateBefore
+import androidx.compose.material.icons.filled.NavigateNext
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.OpenInNew
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Straight
+import androidx.compose.material.icons.filled.SwapVert
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.TurnLeft
+import androidx.compose.material.icons.filled.TurnRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -85,23 +103,44 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mekanat_new.data.maps.GebetaRouteStep
 import com.example.mekanat_new.data.maps.GebetaTravelMode
 import com.example.mekanat_new.data.model.ChurchWithDistance
+import com.example.mekanat_new.ui.components.FullScreenSearchOverlayLoader
 import com.example.mekanat_new.ui.components.GebetaMapView
+import com.example.mekanat_new.ui.components.MekanatDistancePill
+import com.example.mekanat_new.ui.components.MekanatIconBookmarks
+import com.example.mekanat_new.ui.components.MekanatIconDrive
+import com.example.mekanat_new.ui.components.MekanatIconRoute
+import com.example.mekanat_new.ui.components.MekanatIconTransit
+import com.example.mekanat_new.ui.components.MekanatIconWalk
 import com.example.mekanat_new.ui.components.MekanatInkLoader
+import com.example.mekanat_new.ui.components.MekanatLiveBanner
+import com.example.mekanat_new.ui.components.MekanatNigsTag
+import com.example.mekanat_new.ui.components.MekanatRouteButton
+import com.example.mekanat_new.ui.components.MekanatSecondaryButton
+import com.example.mekanat_new.ui.components.MekanatTag
+import com.example.mekanat_new.ui.components.getChurchMarkerCategory
 import com.example.mekanat_new.ui.components.vibrateClick
 import com.example.mekanat_new.ui.components.vibrateSubtle
+import com.example.mekanat_new.ui.theme.BrandEmber
+import com.example.mekanat_new.ui.theme.CrimsonPulse
+import com.example.mekanat_new.ui.theme.MekanatDataTypography
 import com.example.mekanat_new.ui.theme.SignalRed
 import com.example.mekanat_new.ui.theme.SignalRedSubtle
+import com.example.mekanat_new.ui.theme.StatusGreen
+import com.example.mekanat_new.ui.theme.WayfindingTeal
+import com.example.mekanat_new.ui.viewmodel.ChurchSortOption
 import com.example.mekanat_new.ui.viewmodel.MekanatUiState
 
 @Composable
@@ -109,12 +148,19 @@ fun HomeScreen(
     uiState: MekanatUiState,
     onSearchQueryChange: (String) -> Unit,
     onCommitSearch: (String, Int) -> Unit,
+    onTriggerSearchWithAnimation: (String) -> Unit = {},
+    onDismissSearchLoader: () -> Unit = {},
     onDeleteSearchHistory: (Long) -> Unit,
     onClearAllSearchHistory: () -> Unit,
     onFilterChipSelected: (String) -> Unit,
+    onSetSortOption: (ChurchSortOption) -> Unit = {},
     onSelectChurch: (ChurchWithDistance?) -> Unit,
     onStartRoute: (ChurchWithDistance) -> Unit,
     onChangeTravelMode: (GebetaTravelMode) -> Unit = {},
+    onReverseRoute: () -> Unit = {},
+    onToggleLiveNav: () -> Unit = {},
+    onNextNavStep: () -> Unit = {},
+    onPrevNavStep: () -> Unit = {},
     onClearRoute: () -> Unit,
     onToggleMapView: () -> Unit,
     onOpenChurchDetail: (Long) -> Unit,
@@ -128,6 +174,14 @@ fun HomeScreen(
     var isNavStepsExpanded by remember { mutableStateOf(false) }
     var isSearchFocused by remember { mutableStateOf(false) }
     var isSearchPillExpanded by remember { mutableStateOf(false) }
+    var showSortMenu by remember { mutableStateOf(false) }
+    var navOriginQuery by remember(uiState.routeToChurch, uiState.isRouteReversed) {
+        mutableStateOf(if (uiState.isRouteReversed) (uiState.routeToChurch?.church?.name ?: "") else "Current Location (GPS)")
+    }
+    var navDestQuery by remember(uiState.routeToChurch, uiState.isRouteReversed) {
+        mutableStateOf(if (uiState.isRouteReversed) "Current Location (GPS)" else (uiState.routeToChurch?.church?.name ?: ""))
+    }
+    var activeNavSearchTarget by remember { mutableStateOf<String?>(null) }
     val isSearchOpen = isSearchPillExpanded || isSearchFocused
 
     val searchPillCornerRadius by animateDpAsState(
@@ -137,30 +191,35 @@ fun HomeScreen(
     )
 
     val searchPillElevation by animateDpAsState(
-        targetValue = if (isSearchOpen) 8.dp else 3.dp,
+        targetValue = if (isSearchOpen) 6.dp else 2.dp,
         animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
         label = "searchPillElevation"
     )
 
-    val searchPillBorderColor by animateColorAsState(
-        targetValue = if (isSearchOpen) SignalRed.copy(alpha = 0.7f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.6f),
-        animationSpec = tween(durationMillis = 250),
-        label = "searchPillBorderColor"
-    )
-
     val filterChips = listOf(
         "All",
-        "Live Gubae 🔴",
+        "Live Gubae",
         "Nearby (<50km)",
         "Monasteries",
         "Cathedrals",
         "Rock-Hewn"
     )
 
+    fun submitSearch(query: String) {
+        val trimmed = query.trim()
+        if (trimmed.isNotBlank()) {
+            haptic.vibrateClick()
+            isSearchPillExpanded = false
+            isSearchFocused = false
+            focusManager.clearFocus()
+            onTriggerSearchWithAnimation(trimmed)
+        }
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(if (uiState.isMapView) Color(0xFF191C20) else MaterialTheme.colorScheme.background)
     ) {
         if (uiState.isMapView) {
             // High-Definition Map View powered by Gebeta Maps Tile Services
@@ -211,8 +270,9 @@ fun HomeScreen(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(top = 180.dp, bottom = 80.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        .statusBarsPadding()
+                        .navigationBarsPadding(),
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 126.dp, bottom = 80.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(uiState.filteredChurches, key = { it.church.id }) { item ->
@@ -246,7 +306,7 @@ fun HomeScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.28f))
+                    .background(Color.Black.copy(alpha = 0.32f))
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
@@ -258,14 +318,16 @@ fun HomeScreen(
             )
         }
 
-        // Top Search & Filter Floating Overlay
-        Column(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-        ) {
-            // Search Input Row: Floating Search Pill + Separated Floating Circle Toggle
+        // Top Search & Filter Floating Overlay (Only shown when not routing)
+        if (uiState.routeToChurch == null) {
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 6.dp)
+            ) {
+            // Search Input Row: Floating Search Pill + Separated Floating Circle View Toggle
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top
@@ -275,7 +337,6 @@ fun HomeScreen(
                     shape = RoundedCornerShape(searchPillCornerRadius),
                     color = MaterialTheme.colorScheme.surface,
                     shadowElevation = searchPillElevation,
-                    border = BorderStroke(1.dp, searchPillBorderColor),
                     modifier = Modifier
                         .weight(1f)
                         .animateContentSize(
@@ -290,7 +351,7 @@ fun HomeScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(52.dp)
-                                .padding(horizontal = 14.dp),
+                                .padding(horizontal = 12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             IconButton(
@@ -301,10 +362,10 @@ fun HomeScreen(
                                         isSearchFocused = false
                                         focusManager.clearFocus()
                                     } else {
-                                        isSearchPillExpanded = true
+                                        submitSearch(uiState.searchQuery)
                                     }
                                 },
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(28.dp)
                             ) {
                                 Icon(
                                     imageVector = if (isSearchOpen) Icons.Default.ArrowBack else Icons.Default.Search,
@@ -313,14 +374,11 @@ fun HomeScreen(
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
                             OutlinedTextField(
                                 value = uiState.searchQuery,
                                 onValueChange = { query ->
                                     onSearchQueryChange(query)
-                                    if (query.isNotBlank()) {
-                                        onCommitSearch(query, uiState.filteredChurches.size)
-                                    }
                                 },
                                 placeholder = {
                                     Text(
@@ -331,6 +389,12 @@ fun HomeScreen(
                                         )
                                     )
                                 },
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                keyboardActions = KeyboardActions(
+                                    onSearch = {
+                                        submitSearch(uiState.searchQuery)
+                                    }
+                                ),
                                 trailingIcon = {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         if (uiState.searchQuery.isNotEmpty()) {
@@ -349,6 +413,20 @@ fun HomeScreen(
                                                 )
                                             }
                                         }
+
+                                        // Submit button on search bar
+                                        IconButton(
+                                            onClick = { submitSearch(uiState.searchQuery) },
+                                            modifier = Modifier.size(28.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Search,
+                                                contentDescription = "Run Search",
+                                                tint = SignalRed,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+
                                         if (uiState.recentSearches.isNotEmpty()) {
                                             IconButton(
                                                 onClick = {
@@ -393,11 +471,11 @@ fun HomeScreen(
                         // Expanded Search History Dropdown Menu
                         AnimatedVisibility(
                             visible = isSearchOpen,
-                            enter = fadeIn(animationSpec = tween(200, delayMillis = 40)) + expandVertically(
+                            enter = fadeIn(animationSpec = tween(180)) + expandVertically(
                                 animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
                                 expandFrom = Alignment.Top
                             ),
-                            exit = fadeOut(animationSpec = tween(140)) + shrinkVertically(
+                            exit = fadeOut(animationSpec = tween(120)) + shrinkVertically(
                                 animationSpec = spring(dampingRatio = 0.88f, stiffness = Spring.StiffnessMedium),
                                 shrinkTowards = Alignment.Top
                             )
@@ -409,7 +487,7 @@ fun HomeScreen(
                             ) {
                                 HorizontalDivider(
                                     modifier = Modifier.padding(bottom = 8.dp),
-                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
+                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
                                 )
 
                                 // Header Row
@@ -422,7 +500,7 @@ fun HomeScreen(
                                         Icon(
                                             Icons.Default.History,
                                             contentDescription = null,
-                                            tint = SignalRed,
+                                            tint = MaterialTheme.colorScheme.primary,
                                             modifier = Modifier.size(15.dp)
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
@@ -437,13 +515,13 @@ fun HomeScreen(
                                             Spacer(modifier = Modifier.width(6.dp))
                                             Surface(
                                                 shape = CircleShape,
-                                                color = SignalRed.copy(alpha = 0.12f)
+                                                color = MaterialTheme.colorScheme.primaryContainer
                                             ) {
                                                 Text(
                                                     text = "${uiState.recentSearches.size}",
                                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp),
                                                     style = MaterialTheme.typography.labelSmall.copy(
-                                                        color = SignalRed,
+                                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
                                                         fontWeight = FontWeight.Bold,
                                                         fontSize = 10.sp
                                                     )
@@ -494,9 +572,7 @@ fun HomeScreen(
                                                     .clickable {
                                                         haptic.vibrateSubtle()
                                                         onSearchQueryChange(historyItem.query)
-                                                        isSearchPillExpanded = false
-                                                        isSearchFocused = false
-                                                        focusManager.clearFocus()
+                                                        submitSearch(historyItem.query)
                                                     }
                                             ) {
                                                 Row(
@@ -574,19 +650,15 @@ fun HomeScreen(
                                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    val discoveries = listOf("Lalibela", "Debre Damo", "Axum Tsion", "Gishen Maryam", "Live Gubae")
+                                    val discoveries = listOf("Lalibela", "Debre Damo", "Axum Tsion", "Gishen Maryam", "Gondar", "Live Gubae")
                                     items(discoveries) { discovery ->
                                         Surface(
                                             shape = RoundedCornerShape(12.dp),
                                             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.75f),
-                                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)),
                                             modifier = Modifier.clickable {
                                                 haptic.vibrateSubtle()
                                                 onSearchQueryChange(discovery)
-                                                onCommitSearch(discovery, uiState.filteredChurches.size)
-                                                isSearchPillExpanded = false
-                                                isSearchFocused = false
-                                                focusManager.clearFocus()
+                                                submitSearch(discovery)
                                             }
                                         ) {
                                             Row(
@@ -611,67 +683,225 @@ fun HomeScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.width(10.dp))
-
-                // Separated Floating Circle Pill on the Right for View Toggle
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.surface,
-                    shadowElevation = 3.dp,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)),
-                    modifier = Modifier.size(52.dp)
+                // Separated Floating Circle Pill on the Right for View Toggle with Sanctuary Count Badge
+                AnimatedVisibility(
+                    visible = !isSearchFocused && !isSearchPillExpanded,
+                    enter = fadeIn() + expandHorizontally(),
+                    exit = fadeOut() + shrinkHorizontally()
                 ) {
-                    IconButton(
-                        onClick = {
-                            haptic.vibrateClick()
-                            onToggleMapView()
-                        },
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .testTag("toggle_list_map_button")
-                    ) {
-                        Icon(
-                            imageVector = if (uiState.isMapView) Icons.Default.List else Icons.Default.Map,
-                            contentDescription = "Toggle View",
-                            tint = if (uiState.isMapView) MaterialTheme.colorScheme.onSurface else SignalRed,
-                            modifier = Modifier.size(22.dp)
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Box(
+                            modifier = Modifier.size(52.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.surface,
+                                shadowElevation = 2.dp,
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        haptic.vibrateClick()
+                                        onToggleMapView()
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .testTag("toggle_list_map_button")
+                                ) {
+                                    Icon(
+                                        imageVector = if (uiState.isMapView) Icons.Default.List else Icons.Default.Map,
+                                        contentDescription = "Toggle View",
+                                        tint = if (uiState.isMapView) MaterialTheme.colorScheme.primary else SignalRed,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+                            }
+
+                            // Sanctuary Count Badge overlay on top-right of the toggle button (Filled Orangy with White Text)
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = BrandEmber,
+                                shadowElevation = 3.dp,
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .offset(x = 4.dp, y = (-3).dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(5.dp)
+                                            .background(Color.White, CircleShape)
+                                    )
+                                    Spacer(modifier = Modifier.width(3.5.dp))
+                                    Text(
+                                        text = "${uiState.filteredChurches.size}",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 10.5.sp,
+                                            color = Color.White
+                                        )
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Horizontal Floating Filter Pills (No Solid Background Box)
+            // Unified Single-Row Filter & Sort Strip: "Nearest" Sort pill on same row as "All", "Live Gubae", etc.
             LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
+                // First Item: Sort / Nearest Pill with Dropdown Menu (Filled Pill)
+                item {
+                    val isSortCustom = uiState.sortOption != ChurchSortOption.DISTANCE_NEAREST
+                    Box {
+                        Surface(
+                            shape = RoundedCornerShape(20.dp),
+                            color = if (isSortCustom) BrandEmber else MaterialTheme.colorScheme.surface,
+                            border = if (!isSortCustom) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)) else null,
+                            shadowElevation = if (isSortCustom) 3.dp else 1.5.dp,
+                            modifier = Modifier.clickable {
+                                haptic.vibrateSubtle()
+                                showSortMenu = true
+                            }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 11.dp, vertical = 7.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Tune,
+                                    contentDescription = "Sort",
+                                    tint = if (isSortCustom) Color.White else MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = when (uiState.sortOption) {
+                                        ChurchSortOption.DISTANCE_NEAREST -> "Nearest"
+                                        ChurchSortOption.DISTANCE_FURTHEST -> "Furthest"
+                                        ChurchSortOption.NAME_AZ -> "Name A-Z"
+                                        ChurchSortOption.NAME_ZA -> "Name Z-A"
+                                        ChurchSortOption.HISTORICAL -> "Oldest"
+                                    },
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        fontWeight = if (isSortCustom) FontWeight.Bold else FontWeight.SemiBold,
+                                        fontSize = 11.5.sp,
+                                        color = if (isSortCustom) Color.White else MaterialTheme.colorScheme.onSurface
+                                    )
+                                )
+                            }
+                        }
+
+                        DropdownMenu(
+                            expanded = showSortMenu,
+                            onDismissRequest = { showSortMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Nearest First (Distance ↑)") },
+                                onClick = {
+                                    onSetSortOption(ChurchSortOption.DISTANCE_NEAREST)
+                                    showSortMenu = false
+                                },
+                                leadingIcon = {
+                                    if (uiState.sortOption == ChurchSortOption.DISTANCE_NEAREST) {
+                                        Icon(Icons.Default.Check, contentDescription = null, tint = BrandEmber)
+                                    }
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Furthest First (Distance ↓)") },
+                                onClick = {
+                                    onSetSortOption(ChurchSortOption.DISTANCE_FURTHEST)
+                                    showSortMenu = false
+                                },
+                                leadingIcon = {
+                                    if (uiState.sortOption == ChurchSortOption.DISTANCE_FURTHEST) {
+                                        Icon(Icons.Default.Check, contentDescription = null, tint = BrandEmber)
+                                    }
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Sanctuary Name (A - Z)") },
+                                onClick = {
+                                    onSetSortOption(ChurchSortOption.NAME_AZ)
+                                    showSortMenu = false
+                                },
+                                leadingIcon = {
+                                    if (uiState.sortOption == ChurchSortOption.NAME_AZ) {
+                                        Icon(Icons.Default.Check, contentDescription = null, tint = BrandEmber)
+                                    }
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Sanctuary Name (Z - A)") },
+                                onClick = {
+                                    onSetSortOption(ChurchSortOption.NAME_ZA)
+                                    showSortMenu = false
+                                },
+                                leadingIcon = {
+                                    if (uiState.sortOption == ChurchSortOption.NAME_ZA) {
+                                        Icon(Icons.Default.Check, contentDescription = null, tint = BrandEmber)
+                                    }
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Spiritual Antiquity (Oldest First)") },
+                                onClick = {
+                                    onSetSortOption(ChurchSortOption.HISTORICAL)
+                                    showSortMenu = false
+                                },
+                                leadingIcon = {
+                                    if (uiState.sortOption == ChurchSortOption.HISTORICAL) {
+                                        Icon(Icons.Default.Check, contentDescription = null, tint = BrandEmber)
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // Category Filter Pills (Solid Filled Pills: Orangy when active, Solid Surface with crisp border when inactive)
                 items(filterChips) { chip ->
                     val isSelected = uiState.activeFilterChip == chip
                     Surface(
                         shape = RoundedCornerShape(20.dp),
-                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
-                        shadowElevation = if (isSelected) 3.dp else 2.dp,
-                        border = BorderStroke(
-                            1.dp,
-                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)
-                        ),
+                        color = if (isSelected) BrandEmber else MaterialTheme.colorScheme.surface,
+                        border = if (!isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)) else null,
+                        shadowElevation = if (isSelected) 3.5.dp else 1.5.dp,
                         modifier = Modifier.clickable {
                             haptic.vibrateSubtle()
                             onFilterChipSelected(chip)
                         }
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                            modifier = Modifier.padding(horizontal = 13.dp, vertical = 7.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            if (isSelected) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(5.dp)
+                                        .background(Color.White, CircleShape)
+                                )
+                                Spacer(modifier = Modifier.width(5.dp))
+                            }
                             Text(
                                 text = chip,
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
                                     fontSize = 12.sp,
-                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                                    color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
                                 )
                             )
                         }
@@ -679,91 +909,218 @@ fun HomeScreen(
                 }
             }
         }
+    }
 
-        // Active Route & Gebeta / Realistic Highway Navigation HUD (Top, under search)
+        // Dedicated Directions Mode: Top Floating Origin & Destination Search Bar (Pushed lower, divider, search inputs)
         AnimatedVisibility(
             visible = uiState.routeToChurch != null,
             enter = slideInVertically() + fadeIn(),
             exit = slideOutVertically() + fadeOut(),
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(top = 150.dp, start = 16.dp, end = 16.dp)
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(start = 14.dp, end = 14.dp, top = 16.dp, bottom = 8.dp)
         ) {
             uiState.routeToChurch?.let { dest ->
-                val routeRes = uiState.activeRouteResult
-                val distanceText = routeRes?.distanceFormatted ?: "${String.format("%.1f", dest.distanceKm)} km"
-                val durationText = routeRes?.durationFormatted ?: "${(dest.distanceKm / 45.0 * 60).toInt().coerceAtLeast(5)} min"
-
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = MaterialTheme.colorScheme.surface,
-                    border = BorderStroke(1.dp, SignalRed),
-                    shadowElevation = 6.dp,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        // Header: Title & Close Button
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Surface(
+                        shape = RoundedCornerShape(22.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        shadowElevation = 8.dp,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .background(SignalRedSubtle, CircleShape),
-                                contentAlignment = Alignment.Center
+                            // Visual Path Node Indicator (Green Dot -> Vertical Line -> Orange Dot)
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.padding(start = 4.dp, end = 10.dp)
                             ) {
-                                if (uiState.isCalculatingRoute) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(20.dp),
-                                        color = SignalRed,
-                                        strokeWidth = 2.dp
-                                    )
-                                } else {
-                                    Icon(
-                                        Icons.Default.Navigation,
-                                        contentDescription = "Active Route",
-                                        tint = SignalRed,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.width(10.dp))
-
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "Navigating to ${dest.church.name}",
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
+                                Box(
+                                    modifier = Modifier
+                                        .size(9.dp)
+                                        .background(StatusGreen, CircleShape)
                                 )
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = "$distanceText • $durationText",
-                                        style = MaterialTheme.typography.bodySmall.copy(
-                                            color = SignalRed,
+                                Box(
+                                    modifier = Modifier
+                                        .width(1.5.dp)
+                                        .height(18.dp)
+                                        .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.45f))
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .size(9.dp)
+                                        .background(BrandEmber, CircleShape)
+                                )
+                            }
+
+                            // Origin & Destination Search Inputs Column
+                            Column(modifier = Modifier.weight(1f)) {
+                                // Origin Search Input
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(32.dp)
+                                ) {
+                                    BasicTextField(
+                                        value = navOriginQuery,
+                                        onValueChange = {
+                                            navOriginQuery = it
+                                            activeNavSearchTarget = "origin"
+                                        },
+                                        singleLine = true,
+                                        textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 12.5.sp,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        ),
+                                        cursorBrush = SolidColor(BrandEmber),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .onFocusChanged {
+                                                if (it.isFocused) {
+                                                    activeNavSearchTarget = "origin"
+                                                }
+                                            }
+                                            .testTag("nav_origin_input"),
+                                        decorationBox = { innerTextField ->
+                                            if (navOriginQuery.isEmpty()) {
+                                                Text(
+                                                    text = "Starting point (GPS or search...)",
+                                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                                        fontSize = 12.5.sp,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                                    )
+                                                )
+                                            }
+                                            innerTextField()
+                                        }
+                                    )
+
+                                    if (navOriginQuery.isNotEmpty() && activeNavSearchTarget == "origin") {
+                                        IconButton(
+                                            onClick = { navOriginQuery = "" },
+                                            modifier = Modifier.size(22.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Clear,
+                                                contentDescription = "Clear Origin",
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.size(13.dp)
+                                            )
+                                        }
+                                    }
+                                }
+
+                                // Visual Divider Between Start and Destination
+                                HorizontalDivider(
+                                    thickness = 1.dp,
+                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                                    modifier = Modifier.padding(vertical = 2.dp)
+                                )
+
+                                // Destination Search Input
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(32.dp)
+                                ) {
+                                    BasicTextField(
+                                        value = navDestQuery,
+                                        onValueChange = {
+                                            navDestQuery = it
+                                            activeNavSearchTarget = "dest"
+                                        },
+                                        singleLine = true,
+                                        textStyle = MaterialTheme.typography.bodyMedium.copy(
                                             fontWeight = FontWeight.Bold,
-                                            fontSize = 12.sp
-                                        )
+                                            fontSize = 12.5.sp,
+                                            color = BrandEmber
+                                        ),
+                                        cursorBrush = SolidColor(BrandEmber),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .onFocusChanged {
+                                                if (it.isFocused) {
+                                                    activeNavSearchTarget = "dest"
+                                                }
+                                            }
+                                            .testTag("nav_dest_input"),
+                                        decorationBox = { innerTextField ->
+                                            if (navDestQuery.isEmpty()) {
+                                                Text(
+                                                    text = "Destination sanctuary...",
+                                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                                        fontSize = 12.5.sp,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                                    )
+                                                )
+                                            }
+                                            innerTextField()
+                                        }
                                     )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = if (routeRes != null && routeRes.isCorridorFallback) "• Gebeta Corridor ⛰️" else "• Gebeta API 🟢",
-                                        style = MaterialTheme.typography.bodySmall.copy(
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            fontSize = 10.5.sp
-                                        )
-                                    )
+
+                                    if (navDestQuery.isNotEmpty() && activeNavSearchTarget == "dest") {
+                                        IconButton(
+                                            onClick = { navDestQuery = "" },
+                                            modifier = Modifier.size(22.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Clear,
+                                                contentDescription = "Clear Destination",
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.size(13.dp)
+                                            )
+                                        }
+                                    }
                                 }
                             }
 
+                            Spacer(modifier = Modifier.width(6.dp))
+
+                            // Swap / Reverse Origin & Destination Toggle Switch Button
                             IconButton(
                                 onClick = {
                                     haptic.vibrateClick()
+                                    activeNavSearchTarget = null
+                                    focusManager.clearFocus()
+                                    onReverseRoute()
+                                },
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                                    .testTag("btn_swap_route")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.SwapVert,
+                                    contentDescription = "Reverse Origin and Destination",
+                                    tint = BrandEmber,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(4.dp))
+
+                            // Close / Exit Route Button
+                            IconButton(
+                                onClick = {
+                                    haptic.vibrateClick()
+                                    activeNavSearchTarget = null
+                                    focusManager.clearFocus()
                                     onClearRoute()
                                 },
-                                modifier = Modifier.size(32.dp)
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f), CircleShape)
+                                    .testTag("btn_close_route")
                             ) {
                                 Icon(
                                     Icons.Default.Close,
@@ -773,20 +1130,190 @@ fun HomeScreen(
                                 )
                             }
                         }
+                    }
 
-                        Spacer(modifier = Modifier.height(10.dp))
+                    // Interactive Suggestions Dropdown Card
+                    AnimatedVisibility(
+                        visible = activeNavSearchTarget != null,
+                        enter = expandVertically() + fadeIn(),
+                        exit = shrinkVertically() + fadeOut()
+                    ) {
+                        val currentSearchQuery = if (activeNavSearchTarget == "origin") navOriginQuery else navDestQuery
+                        val suggestions = remember(currentSearchQuery, uiState.filteredChurches) {
+                            val query = currentSearchQuery.trim()
+                            if (query.isEmpty() || query.equals("Current Location (GPS)", ignoreCase = true)) {
+                                uiState.filteredChurches.take(6)
+                            } else {
+                                uiState.filteredChurches.filter {
+                                    it.church.name.contains(query, ignoreCase = true) ||
+                                    (it.church.nameAmharic?.contains(query, ignoreCase = true) == true) ||
+                                    it.church.diocese.contains(query, ignoreCase = true) ||
+                                    it.church.churchType.contains(query, ignoreCase = true)
+                                }.take(8)
+                            }
+                        }
 
-                        // Travel Mode Selector Row
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = MaterialTheme.colorScheme.surface,
+                            shadowElevation = 8.dp,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
+                            modifier = Modifier
+                                .padding(top = 6.dp)
+                                .fillMaxWidth()
+                                .heightIn(max = 240.dp)
+                        ) {
+                            LazyColumn(
+                                contentPadding = PaddingValues(vertical = 4.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                if (activeNavSearchTarget == "origin") {
+                                    item {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    haptic.vibrateClick()
+                                                    navOriginQuery = "Current Location (GPS)"
+                                                    activeNavSearchTarget = null
+                                                    focusManager.clearFocus()
+                                                    if (uiState.isRouteReversed) {
+                                                        onReverseRoute()
+                                                    }
+                                                }
+                                                .padding(horizontal = 14.dp, vertical = 9.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                Icons.Default.MyLocation,
+                                                contentDescription = "Current Location",
+                                                tint = StatusGreen,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(10.dp))
+                                            Column {
+                                                Text(
+                                                    text = "Current Location (GPS)",
+                                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = StatusGreen
+                                                    )
+                                                )
+                                                Text(
+                                                    text = "Addis Ababa / My Device Position",
+                                                    style = MaterialTheme.typography.labelSmall.copy(
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                )
+                                            }
+                                        }
+                                        HorizontalDivider(
+                                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
+                                            thickness = 0.5.dp
+                                        )
+                                    }
+                                }
+
+                                items(suggestions, key = { it.church.id }) { suggestion ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                haptic.vibrateClick()
+                                                if (activeNavSearchTarget == "origin") {
+                                                    navOriginQuery = suggestion.church.name
+                                                    activeNavSearchTarget = null
+                                                    focusManager.clearFocus()
+                                                } else {
+                                                    navDestQuery = suggestion.church.name
+                                                    activeNavSearchTarget = null
+                                                    focusManager.clearFocus()
+                                                    onStartRoute(suggestion)
+                                                }
+                                            }
+                                            .padding(horizontal = 14.dp, vertical = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Place,
+                                            contentDescription = null,
+                                            tint = if (activeNavSearchTarget == "dest") BrandEmber else StatusGreen,
+                                            modifier = Modifier.size(17.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = suggestion.church.name,
+                                                style = MaterialTheme.typography.bodySmall.copy(
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    fontSize = 12.5.sp,
+                                                    color = MaterialTheme.colorScheme.onSurface
+                                                ),
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Text(
+                                                text = "${suggestion.church.nameAmharic ?: ""} • ${suggestion.church.diocese}",
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    fontSize = 10.5.sp,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                ),
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        val distFormatted = if (suggestion.distanceKm < 1.0) {
+                                            "${(suggestion.distanceKm * 1000).toInt()} m"
+                                        } else {
+                                            "%.1f km".format(suggestion.distanceKm)
+                                        }
+                                        MekanatDistancePill(
+                                            distanceText = distFormatted
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Dedicated Directions Mode: Bottom Navigation Controls & Travel Options Sheet
+        AnimatedVisibility(
+            visible = uiState.routeToChurch != null,
+            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(start = 16.dp, end = 16.dp, bottom = 80.dp)
+        ) {
+            uiState.routeToChurch?.let { dest ->
+                val routeRes = uiState.activeRouteResult
+                val distanceText = routeRes?.distanceFormatted ?: "${String.format("%.1f", dest.distanceKm)} km"
+                val durationText = routeRes?.durationFormatted ?: "${(dest.distanceKm / 45.0 * 60).toInt().coerceAtLeast(5)} min"
+
+                Surface(
+                    shape = RoundedCornerShape(24.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    shadowElevation = 10.dp,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        // Travel Mode Selector Pills (Drive / Walk / Transit)
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             GebetaTravelMode.values().forEach { mode ->
                                 val isSelected = uiState.selectedTravelMode == mode
-                                val modeLabel = when (mode) {
-                                    GebetaTravelMode.DRIVING -> "🚗 Driving"
-                                    GebetaTravelMode.WALKING -> "🚶 Pilgrimage"
-                                    GebetaTravelMode.TRANSIT -> "🚐 Transit"
+                                val modeTitle = when (mode) {
+                                    GebetaTravelMode.DRIVING -> "Drive"
+                                    GebetaTravelMode.WALKING -> "Pilgrim"
+                                    GebetaTravelMode.TRANSIT -> "Transit"
                                 }
 
                                 Surface(
@@ -802,12 +1329,28 @@ fun HomeScreen(
                                             }
                                         }
                                 ) {
-                                    Box(
-                                        modifier = Modifier.padding(vertical = 6.dp),
-                                        contentAlignment = Alignment.Center
+                                    Row(
+                                        modifier = Modifier.padding(vertical = 8.dp, horizontal = 6.dp),
+                                        horizontalArrangement = Arrangement.Center,
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
+                                        when (mode) {
+                                            GebetaTravelMode.DRIVING -> MekanatIconDrive(
+                                                tint = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+                                                size = 15.dp
+                                            )
+                                            GebetaTravelMode.WALKING -> MekanatIconWalk(
+                                                tint = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+                                                size = 15.dp
+                                            )
+                                            GebetaTravelMode.TRANSIT -> MekanatIconTransit(
+                                                tint = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+                                                size = 15.dp
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(5.dp))
                                         Text(
-                                            text = modeLabel,
+                                            text = modeTitle,
                                             style = MaterialTheme.typography.labelSmall.copy(
                                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                                 fontSize = 11.sp
@@ -818,9 +1361,172 @@ fun HomeScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
 
-                        // Expandable Waypoints & Turn Guidance
+                        // Live Guidance Turn Banner OR Static Overview with Start Button
+                        if (uiState.isLiveNavigating) {
+                            val steps = routeRes?.steps ?: listOf(
+                                GebetaRouteStep(1, "Head forward toward highway corridor", 1.2, 3),
+                                GebetaRouteStep(2, "Follow main road toward destination", dest.distanceKm * 0.8, 15),
+                                GebetaRouteStep(3, "Arrive at sacred sanctuary gate", 0.3, 1)
+                            )
+                            val currentStepIndex = uiState.liveNavStepIndex.coerceIn(0, (steps.size - 1).coerceAtLeast(0))
+                            val currentStep = steps.getOrElse(currentStepIndex) { steps.first() }
+
+                            val directionIcon = when {
+                                currentStep.instruction.contains("left", ignoreCase = true) -> Icons.Default.TurnLeft
+                                currentStep.instruction.contains("right", ignoreCase = true) -> Icons.Default.TurnRight
+                                currentStep.instruction.contains("arrive", ignoreCase = true) -> Icons.Default.Place
+                                else -> Icons.Default.Straight
+                            }
+
+                            Surface(
+                                shape = RoundedCornerShape(16.dp),
+                                color = StatusGreen,
+                                contentColor = Color.White,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Icon(
+                                            imageVector = directionIcon,
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(28.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = currentStep.instruction,
+                                                style = MaterialTheme.typography.titleSmall.copy(
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 13.5.sp,
+                                                    color = Color.White
+                                                ),
+                                                maxLines = 2,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Text(
+                                                text = "In ${currentStep.distanceFormatted} • Step ${currentStepIndex + 1} of ${steps.size}",
+                                                style = MaterialTheme.typography.bodySmall.copy(
+                                                    color = Color.White.copy(alpha = 0.85f),
+                                                    fontSize = 11.5.sp
+                                                )
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                            IconButton(
+                                                onClick = {
+                                                    haptic.vibrateSubtle()
+                                                    onPrevNavStep()
+                                                },
+                                                enabled = currentStepIndex > 0,
+                                                modifier = Modifier.size(32.dp)
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.NavigateBefore,
+                                                    contentDescription = "Previous step",
+                                                    tint = if (currentStepIndex > 0) Color.White else Color.White.copy(alpha = 0.4f),
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                            }
+
+                                            IconButton(
+                                                onClick = {
+                                                    haptic.vibrateSubtle()
+                                                    onNextNavStep()
+                                                },
+                                                enabled = currentStepIndex < steps.size - 1,
+                                                modifier = Modifier.size(32.dp)
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.NavigateNext,
+                                                    contentDescription = "Next step",
+                                                    tint = if (currentStepIndex < steps.size - 1) Color.White else Color.White.copy(alpha = 0.4f),
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                            }
+                                        }
+
+                                        Button(
+                                            onClick = {
+                                                haptic.vibrateClick()
+                                                onToggleLiveNav()
+                                            },
+                                            shape = RoundedCornerShape(16.dp),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color.White,
+                                                contentColor = StatusGreen
+                                            ),
+                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                            modifier = Modifier.height(32.dp)
+                                        ) {
+                                            Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(14.dp))
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text("Stop Live", fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            // Static Route Overview + Start Live Guidance CTA
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "$distanceText • $durationText",
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = SignalRed,
+                                            fontSize = 14.sp
+                                        )
+                                    )
+                                    Text(
+                                        text = if (routeRes != null && routeRes.isCorridorFallback) "Gebeta Corridor Route" else "Gebeta Real-Time Routing",
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            fontSize = 11.sp
+                                        )
+                                    )
+                                }
+
+                                Button(
+                                    onClick = {
+                                        haptic.vibrateClick()
+                                        onToggleLiveNav()
+                                    },
+                                    shape = RoundedCornerShape(20.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = StatusGreen,
+                                        contentColor = Color.White
+                                    ),
+                                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                                    modifier = Modifier.height(38.dp)
+                                ) {
+                                    Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Start Navigation", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                }
+                            }
+                        }
+
+                        // Expandable Waypoints & External Nav Links
+                        Spacer(modifier = Modifier.height(6.dp))
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -830,7 +1536,7 @@ fun HomeScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Turn-by-Turn Guidance (${routeRes?.steps?.size ?: 3} steps)",
+                                text = "Route Waypoints (${routeRes?.steps?.size ?: 3} steps)",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
@@ -852,7 +1558,7 @@ fun HomeScreen(
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 8.dp),
+                                    .padding(top = 6.dp),
                                 verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 val steps = routeRes?.steps ?: listOf(
@@ -929,7 +1635,7 @@ fun HomeScreen(
                                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                                         modifier = Modifier.weight(1f)
                                     ) {
-                                        Text("Gebeta Routing", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        Text("Gebeta Web", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -939,14 +1645,15 @@ fun HomeScreen(
             }
         }
 
-        // Selected Church Floating Bottom Preview Card (Safe Area Pushed Up, Pilled Actions)
+        // Selected Church Floating Bottom Preview Card (Only visible when NOT routing)
         AnimatedVisibility(
-            visible = uiState.isMapView && uiState.selectedChurch != null,
+            visible = uiState.routeToChurch == null && uiState.isMapView && uiState.selectedChurch != null,
             enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
             exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(start = 16.dp, end = 16.dp, bottom = 20.dp)
+                .navigationBarsPadding()
+                .padding(start = 16.dp, end = 16.dp, bottom = 80.dp)
         ) {
             uiState.selectedChurch?.let { item ->
                 ChurchPreviewCard(
@@ -965,6 +1672,15 @@ fun HomeScreen(
                     }
                 )
             }
+        }
+
+        // Full Screen Search Animation Overlay Loader triggered on search submission
+        if (uiState.isSearchingLoading) {
+            FullScreenSearchOverlayLoader(
+                searchQuery = uiState.searchQuery,
+                resultCount = uiState.filteredChurches.size,
+                onDismiss = onDismissSearchLoader
+            )
         }
     }
 }
@@ -1025,12 +1741,12 @@ fun ChurchPreviewCard(
     onClose: () -> Unit
 ) {
     Card(
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         modifier = Modifier
             .fillMaxWidth()
             .testTag("church_preview_card")
@@ -1043,28 +1759,20 @@ fun ChurchPreviewCard(
                 verticalAlignment = Alignment.Top
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    if (item.hasActiveGubae) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .padding(bottom = 6.dp)
-                                .background(SignalRedSubtle, RoundedCornerShape(12.dp))
-                                .padding(horizontal = 8.dp, vertical = 3.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.FiberManualRecord,
-                                contentDescription = "Live",
-                                tint = SignalRed,
-                                modifier = Modifier.size(8.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "LIVE GUBAE NOW",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = SignalRed,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 10.sp
-                                )
+                    val category = getChurchMarkerCategory(item.church.churchType, item.hasActiveGubae)
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.padding(bottom = 6.dp)
+                    ) {
+                        // Category Badge Pill
+                        MekanatTag(text = "${category.titleAmharic} • ${category.title.uppercase()}")
+
+                        if (item.hasActiveGubae) {
+                            MekanatLiveBanner(
+                                text = "LIVE GUBAE",
+                                modifier = Modifier
                             )
                         }
                     }
@@ -1104,10 +1812,12 @@ fun ChurchPreviewCard(
             // Metadata info row: Distance & Region
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                MekanatDistancePill(distanceText = "${String.format("%.1f", item.distanceKm)} km")
                 Text(
-                    text = "${String.format("%.1f", item.distanceKm)} km away • ${item.church.diocese}",
+                    text = item.church.diocese,
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 12.sp,
@@ -1120,67 +1830,43 @@ fun ChurchPreviewCard(
 
             // Primary Tabot & Nigs notice
             item.primaryTabot?.let { tabot ->
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "Tabot: ${tabot.name} (${tabot.nameEnglish})",
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                )
-                item.nextNigsFormatted?.let { nigs ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
                     Text(
-                        text = "Next Nigs: $nigs",
+                        text = "Tabot: ${tabot.name} (${tabot.nameEnglish})",
                         style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 11.5.sp
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     )
+                }
+                item.nextNigsFormatted?.let { nigs ->
+                    Spacer(modifier = Modifier.height(4.dp))
+                    MekanatNigsTag(text = "Next Nigs: $nigs")
                 }
             }
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Action Buttons: View Details & Route (Pilled 24dp buttons)
+            // Action Buttons: View Details & Route
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                OutlinedButton(
+                MekanatSecondaryButton(
+                    text = "Details",
                     onClick = onViewDetail,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.onSurface
-                    ),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.7f))
-                ) {
-                    Icon(
-                        Icons.Default.Info,
-                        contentDescription = "Details",
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Details", fontSize = 13.sp)
-                }
+                    modifier = Modifier.weight(1f)
+                )
 
-                Button(
+                MekanatRouteButton(
+                    text = "▲ Start route",
                     onClick = onStartRoute,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = SignalRed,
-                        contentColor = Color.White
-                    )
-                ) {
-                    Icon(
-                        Icons.Default.Directions,
-                        contentDescription = "Route",
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Route", fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                }
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }
@@ -1199,8 +1885,8 @@ fun ChurchListItemCard(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onSelect() }
@@ -1214,29 +1900,10 @@ fun ChurchListItemCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     if (item.hasActiveGubae) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .padding(bottom = 4.dp)
-                                .background(SignalRedSubtle, RoundedCornerShape(10.dp))
-                                .padding(horizontal = 7.dp, vertical = 2.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.FiberManualRecord,
-                                contentDescription = "Live",
-                                tint = SignalRed,
-                                modifier = Modifier.size(8.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "LIVE GUBAE",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = SignalRed,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 9.5.sp
-                                )
-                            )
-                        }
+                        MekanatLiveBanner(
+                            text = "LIVE GUBAE",
+                            modifier = Modifier.padding(bottom = 6.dp)
+                        )
                     }
 
                     Text(
@@ -1259,11 +1926,10 @@ fun ChurchListItemCard(
                     onClick = { onToggleFav(isFavorite) },
                     modifier = Modifier.size(32.dp)
                 ) {
-                    Icon(
-                        imageVector = if (isFavorite) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                        contentDescription = "Bookmark",
-                        tint = if (isFavorite) SignalRed else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp)
+                    MekanatIconBookmarks(
+                        tint = if (isFavorite) BrandEmber else MaterialTheme.colorScheme.onSurfaceVariant,
+                        filled = isFavorite,
+                        size = 20.dp
                     )
                 }
             }
@@ -1291,39 +1957,19 @@ fun ChurchListItemCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Footer Row: Distance & Pilled Route Button
+            // Footer Row: Distance Pill & Route Button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "${String.format("%.1f", item.distanceKm)} km away",
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp
-                    )
-                )
+                MekanatDistancePill(distanceText = "${String.format("%.1f", item.distanceKm)} km away")
 
-                Button(
+                MekanatRouteButton(
+                    text = "▲ Route",
                     onClick = onRoute,
-                    shape = RoundedCornerShape(20.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = SignalRed,
-                        contentColor = Color.White
-                    ),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                    modifier = Modifier.height(36.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Directions,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Route", fontSize = 12.5.sp, fontWeight = FontWeight.Bold)
-                }
+                    modifier = Modifier.height(38.dp)
+                )
             }
         }
     }

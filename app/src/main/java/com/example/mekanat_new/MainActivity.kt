@@ -7,7 +7,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.mekanat_new.data.local.MekanatDatabase
 import com.example.mekanat_new.data.repository.ChurchRepository
 import com.example.mekanat_new.ui.screens.MainScreen
@@ -34,7 +36,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            MekanatTheme {
+            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+            MekanatTheme(themeMode = uiState.themeMode) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     MainScreen(viewModel = viewModel)
                 }
@@ -42,4 +45,5 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
 
